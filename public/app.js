@@ -17,6 +17,7 @@
         nextBtn: document.getElementById('next-btn'),
         chartCounter: document.getElementById('chart-counter'),
         chartDate: document.getElementById('chart-date'),
+        chartWeekday: document.getElementById('chart-weekday'),
         chartChange: document.getElementById('chart-change')
     };
 
@@ -59,6 +60,9 @@
 
         // Update date
         elements.chartDate.textContent = chart.date || '--';
+
+        // Update weekday
+        elements.chartWeekday.textContent = chart.weekday || '';
 
         // Update change percentage
         elements.chartChange.textContent = chart.change || '--';

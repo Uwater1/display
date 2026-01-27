@@ -222,6 +222,15 @@ body {
     text-align: center;
 }
 
+/* Chart Details - Date, Weekday, and Change on same row */
+.chart-details {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    flex-wrap: wrap;
+    justify-content: center;
+}
+
 /* Chart Counter */
 .chart-counter {
     font-size: 0.85rem;
@@ -252,7 +261,6 @@ body {
     font-weight: 500;
     padding: 0.2rem 0.6rem;
     border-radius: var(--radius-sm);
-    margin-top: 0.25rem;
 }
 
 .chart-change.positive {
