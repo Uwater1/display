@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Financial Chart Viewer - SVG Chart Display with Pagination">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>Financial Charts</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+    <div id="app" class="app-container">
+        <header class="app-header">
+            <h1>Financial Charts</h1>
+        </header>
+
+        <main class="chart-container">
+            <div id="chart-display" class="chart-display">
+                <!-- SVG chart will be loaded here -->
+                <div class="loading">Loading chart...</div>
+            </div>
+        </main>
+
+        <nav class="navigation">
+            <button id="prev-btn" class="nav-btn" aria-label="Previous Chart">
+                <span class="nav-icon">←</span>
+                <span class="nav-text">Previous</span>
+            </button>
+
+            <div class="chart-info">
+                <div id="chart-counter" class="chart-counter">Chart 1 of 1</div>
+                <div id="chart-date" class="chart-date">--</div>
+                <div id="chart-change" class="chart-change">--</div>
+            </div>
+
+            <button id="next-btn" class="nav-btn" aria-label="Next Chart">
+                <span class="nav-text">Next</span>
+                <span class="nav-icon">→</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>

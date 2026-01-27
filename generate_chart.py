@@ -46,7 +46,8 @@ def generate_candlestick_chart(csv_path: str, output_path: str = None):
     # Determine output path from last candle date and percentage change if not provided
     if output_path is None:
         last_date_str = last_date.strftime('%Y-%m-%d')
-        output_path = f"{last_date_str}:{pct_str}.svg"
+        weekday = last_date.strftime('%a')
+        output_path = f"{last_date_str};{weekday}:{pct_str}.svg"
     
     # Print percentage info
     direction = "↑" if pct_change >= 0 else "↓"
@@ -166,7 +167,8 @@ def generate_candlestick_chart(csv_path: str, output_path: str = None):
     # Display percentage change of last trading day on chart
     pct_color = '#26a69a' if pct_change >= 0 else '#ef5350'
     pct_symbol = "▲" if pct_change >= 0 else "▼"
-    svg_parts.append(f'<text x="{chart_width-margin}" y="{margin}" text-anchor="end" font-size="28" fill="{pct_color}" font-weight="bold">{pct_symbol} {pct_change:+.2f}%</text>')
+    weekday = last_date.strftime('%a')
+    svg_parts.append(f'<text x="{chart_width-margin}" y="{margin}" text-anchor="end" font-size="40" fill="{pct_color}" font-weight="bold">{pct_symbol} {pct_change:+.2f}% ({weekday})</text>')
     
     svg_parts.append('</svg>')
     
