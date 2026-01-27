@@ -68,12 +68,12 @@ body {
 .app-header {
     text-align: center;
     width: 100%;
-    padding-bottom: 1.5rem;
+    padding-bottom: 0.5rem;
     border-bottom: none;
 }
 
 .app-header h1 {
-    font-size: 1rem;
+    font-size: 0.75rem;
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.02em;
