@@ -30,7 +30,7 @@ def generate_candlestick_chart(csv_path: str, output_path: str = None):
     df = pd.read_csv(csv_path)
     
     # Parse the datetime column
-    df['time'] = pd.to_datetime(df['time'])
+    df['time'] = pd.to_datetime(df['time'], utc=True)
     
     # Calculate percentage change for the last trading day
     df['date'] = df['time'].dt.date
