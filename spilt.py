@@ -3,15 +3,17 @@
 Split CSV files with 5-minute trading data into chunks of exactly 2 trading days.
 
 Each trading day contains 78 rows (5-minute intervals from 9:30 AM to 3:55 PM ET).
-This script splits data into files containing exactly 2 trading days (156 data rows).
+This script splits data into files containing exactly 2 trading days.
+
+The script detects trading day boundaries by looking for rows that start at 9:30 AM.
+This handles half trading days (e.g., market closes early) correctly.
 
 Usage:
-    python split_trading_data.py [INPUT_FILE] [--output OUTPUT_DIR] [--rows-per-day ROWS]
+    python split_trading_data.py [INPUT_FILE] [--output OUTPUT_DIR]
 
 Arguments:
     INPUT_FILE     Input CSV file path (default: qqq5m.csv)
     --output    Output directory path (default: current directory)
-    --rows-per-day  Number of rows per trading day (default: 78)
 
 Output:
     Named sequentially as output_001.csv, output_002.csv, etc.
@@ -28,6 +30,7 @@ from typing import List, Tuple
 ROWS_PER_DAY = 78  # 5-minute intervals from 9:30 AM to 3:55 PM ET = 78 bars
 DEFAULT_INPUT = "qqq5m.csv"
 DEFAULT_OUTPUT_PREFIX = "output"
+TRADING_DAY_START = "T09:30:00"  # Trading day starts at 9:30 AM ET
 
 
 def parse_arguments() -> argparse.Namespace:
@@ -39,7 +42,6 @@ def parse_arguments() -> argparse.Namespace:
 Examples:
     python split_trading_data.py data.csv
     python split_trading_data.py data.csv --output /tmp/split
-    python split_trading_data.py --rows-per-day 78
         """
     )
     parser.add_argument(
@@ -54,12 +56,6 @@ Examples:
         type=str,
         default=".",
         help="Output directory path (default: current directory)"
-    )
-    parser.add_argument(
-        "--rows-per-day",
-        type=int,
-        default=ROWS_PER_DAY,
-        help=f"Number of rows per trading day (default: {ROWS_PER_DAY})"
     )
     return parser.parse_args()
 
@@ -89,22 +85,59 @@ def read_csv_header(input_file: str) -> Tuple[str, List[str]]:
     return header, lines
 
 
-def count_total_rows(lines: List[str]) -> int:
+def is_trading_day_start(line: str) -> bool:
     """
-    Count the number of data rows (non-empty, non-comment lines).
+    Check if a line represents the start of a trading day (9:30 AM).
     
     Args:
-        lines: List of lines from the CSV file
+        line: A CSV data line
         
     Returns:
-        Number of valid data rows
+        True if the line starts at 9:30 AM, False otherwise
     """
-    count = 0
+    stripped = line.strip()
+    if not stripped:
+        return False
+    
+    # First field is the timestamp
+    first_field = stripped.split(',')[0]
+    
+    # Check if it contains T09:30:00 (9:30 AM start)
+    # Format: 2024-02-12T09:30:00-05:00
+    return TRADING_DAY_START in first_field
+
+
+def group_by_trading_days(lines: List[str]) -> List[List[str]]:
+    """
+    Group data lines by trading day based on 9:30 AM start times.
+    
+    Args:
+        lines: List of data lines from CSV
+        
+    Returns:
+        List of trading days, where each trading day is a list of its rows
+    """
+    trading_days = []
+    current_day = []
+    
     for line in lines:
         stripped = line.strip()
-        if stripped and not stripped.startswith('#'):
-            count += 1
-    return count
+        if not stripped or stripped.startswith('#'):
+            continue
+            
+        if is_trading_day_start(line):
+            # Start of a new trading day
+            if current_day:
+                trading_days.append(current_day)
+            current_day = [line]
+        else:
+            current_day.append(line)
+    
+    # Don't forget the last trading day
+    if current_day:
+        trading_days.append(current_day)
+    
+    return trading_days
 
 
 def write_chunk(
@@ -128,7 +161,8 @@ def write_chunk(
         Path to the created file
     """
     if use_date_filename and rows:
-        # Extract date from last row (format: 2024-02-12T09:30:00-05:00)
+        # Extract date from LAST row (format: 2024-02-12T09:30:00-05:00)
+        # This names the file after the last trading day in the chunk
         last_row = rows[-1].strip()
         if last_row:
             # Split by comma and take first field (time column)
@@ -153,50 +187,66 @@ def write_chunk(
 def split_csv(
     input_file: str,
     output_dir: str,
-    rows_per_day: int = ROWS_PER_DAY,
     use_date_filename: bool = True
 ) -> Tuple[int, int, int]:
     """
     Split a CSV file into chunks of exactly 2 trading days.
     
+    The script detects trading day boundaries by looking for rows starting at 9:30 AM.
+    This handles half trading days (e.g., market closes early) correctly.
+    
     Args:
         input_file: Path to the input CSV file
         output_dir: Directory to write output files
-        rows_per_day: Number of rows per trading day (default: 78)
         use_date_filename: If True, name files after last trading day
         
     Returns:
-        Tuple of (total_chunks, complete_chunks, incomplete_rows)
+        Tuple of (total_chunks, complete_chunks, incomplete_chunks)
     """
     # Read header and all data lines
     header, all_lines = read_csv_header(input_file)
     
-    # Filter to get only valid data rows (non-empty, non-comment)
-    data_rows = [line for line in all_lines if line.strip() and not line.strip().startswith('#')]
-    total_data_rows = len(data_rows)
+    # Group lines by trading day
+    trading_days = group_by_trading_days(all_lines)
     
-    # Calculate rows per chunk (2 trading days)
-    rows_per_chunk = rows_per_day * 2
+    if not trading_days:
+        raise ValueError("No valid trading data found in the file")
     
-    # Calculate number of complete chunks and remaining rows
-    total_chunks = (total_data_rows + rows_per_chunk - 1) // rows_per_chunk
-    complete_chunks = total_data_rows // rows_per_chunk
-    incomplete_rows = total_data_rows % rows_per_chunk
+    # Print trading day info
+    print(f"Found {len(trading_days)} trading days in the file")
+    print(f"Trading day 1: {len(trading_days[0])} rows")
+    if len(trading_days) > 1:
+        print(f"Trading day 2: {len(trading_days[1])} rows")
     
     # Ensure output directory exists
     os.makedirs(output_dir, exist_ok=True)
     
+    # Group trading days into chunks of 2 with sliding window
+    # Each trading day appears in 2 consecutive files (as last day of chunk N, first day of chunk N+1)
+    # This creates overlapping chunks: [Day1+Day2], [Day2+Day3], [Day3+Day4], ...
+    chunks = []
+    for i in range(len(trading_days) - 1):
+        # Each chunk contains trading_days[i] and trading_days[i+1]
+        chunk_rows = trading_days[i] + trading_days[i + 1]
+        chunks.append(chunk_rows)
+    
     # Process and write chunks
     chunk_number = 0
-    for i in range(0, total_data_rows, rows_per_chunk):
+    for chunk_rows in chunks:
         chunk_number += 1
-        chunk_rows = data_rows[i:i + rows_per_chunk]
-        
         output_path = write_chunk(output_dir, chunk_number, header, chunk_rows, use_date_filename)
         rows_written = len(chunk_rows)
-        print(f"Created: {output_path} ({rows_written} rows)")
+        trading_days_in_chunk = len([1 for r in chunk_rows if is_trading_day_start(r)])
+        if trading_days_in_chunk == 0 and chunk_rows:
+            trading_days_in_chunk = 1
+        print(f"Created: {output_path} ({rows_written} rows, {trading_days_in_chunk} trading day(s))")
     
-    return total_chunks, complete_chunks, incomplete_rows
+    # Count complete and incomplete chunks
+    # A complete chunk has at least 2 trading days (156 rows = 2 * 78)
+    complete_chunks = len([c for c in chunks if len(c) >= 2 * ROWS_PER_DAY])
+    incomplete_chunks = len(chunks) - complete_chunks
+    
+    return len(chunks), complete_chunks, incomplete_chunks
 
 
 def main():
@@ -212,22 +262,14 @@ def main():
         print(f"Error: '{args.input}' is not a file", file=sys.stderr)
         sys.exit(1)
     
-    # Validate rows per day
-    if args.rows_per_day <= 0:
-        print(f"Error: rows-per-day must be positive, got {args.rows_per_day}", file=sys.stderr)
-        sys.exit(1)
-    
     print(f"Splitting CSV file: {args.input}")
     print(f"Output directory: {args.output}")
-    print(f"Rows per trading day: {args.rows_per_day}")
-    print(f"Rows per output file: {args.rows_per_day * 2}")
     print("-" * 50)
     
     try:
-        total_chunks, complete_chunks, incomplete_rows = split_csv(
+        total_chunks, complete_chunks, incomplete_chunks = split_csv(
             args.input,
-            args.output,
-            args.rows_per_day
+            args.output
         )
         
         print("-" * 50)
@@ -235,9 +277,9 @@ def main():
         print(f"  Total output files: {total_chunks}")
         print(f"  Complete (2-day) files: {complete_chunks}")
         
-        if incomplete_rows > 0:
-            print(f"  Incomplete file: {incomplete_rows} rows")
-            print(f"  Note: Last file has less than 2 trading days of data")
+        if incomplete_chunks > 0:
+            print(f"  Incomplete files: {incomplete_chunks}")
+            print(f"  Note: Some files have less than 2 trading days of data")
         
         print("-" * 50)
         print(f"Files named after last trading day in each chunk (e.g., 2024-02-13.csv)")
