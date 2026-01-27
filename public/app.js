@@ -22,7 +22,7 @@
 
     /**
      * Get the initial chart index from URL query parameter
-     * Defaults to the last chart if not specified or invalid
+     * Defaults to the first chart if not specified or invalid
      */
     function getInitialIndex() {
         const urlParams = new URLSearchParams(window.location.search);
@@ -35,8 +35,8 @@
             }
         }
 
-        // Default to last chart
-        return charts.length - 1;
+        // Default to first chart
+        return 0;
     }
 
     /**
@@ -99,7 +99,7 @@
 
             if (chart.filename) {
                 const img = document.createElement('img');
-                img.src = chart.filename;
+                img.src = '../data/chart/' + chart.filename;
                 img.alt = `Chart for ${chart.date}`;
                 img.className = 'chart-image';
                 img.onload = () => {
@@ -224,7 +224,7 @@
                 throw new Error('No charts available');
             }
 
-            // Get initial index from URL or default to last chart
+            // Get initial index from URL or default to first chart
             currentIndex = getInitialIndex();
 
             // Update URL to match current state
