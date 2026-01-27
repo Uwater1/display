@@ -48,3 +48,9 @@ jobs:
       - name: Deploy to GitHub Pages
         id: deployment
         uses: actions/deploy-pages@v4
+
+      - name: Get deployment URL
+        run: |
+          URL="https://${GITHUB_ACTOR}.github.io/${GITHUB_REPO#*/}"
+          echo "::notice::Deploy complete! Site available at: $URL"
+        if: always()

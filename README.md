@@ -1,8 +1,44 @@
-# Stock Chart Generator
+# Stock Chart Generator & Viewer
 
-A Python tool that generates 5-minute candlestick charts from OHLCV (Open, High, Low, Close, Volume) CSV data. Charts are saved as optimized SVG files.
+A Python tool that generates 5-minute candlestick charts from OHLCV (Open, High, Low, Close, Volume) CSV data. Charts are saved as optimized SVG files. Includes a web viewer for browsing generated charts.
+
+## Web Viewer Features
+
+The included web viewer (`public/`) provides an interactive interface for browsing generated stock charts:
+
+- **SVG Chart Viewer with Pagination**: Browse through all generated charts with easy navigation
+- **Keyboard Navigation**: Use `A`/`D` keys or arrow keys (←/→) to navigate between charts
+- **URL State for Sharing**: URL updates automatically to include the current chart index, allowing you to share direct links to specific charts
+- **Responsive Design**: Works seamlessly on desktop and mobile devices
+
+**Live Demo**: Replace `https://<username>.github.io/<repo>` with your actual GitHub Pages URL
+
+## Deployment
+
+### Deploy to GitHub Pages
+
+1. Fork or clone this repository
+2. Go to **Settings** → **Pages**
+3. Under **Source**, select "GitHub Actions"
+4. Run the **Deploy to GitHub Pages** workflow:
+   - Navigate to **Actions** → **Deploy to GitHub Pages**
+   - Click **Run workflow** → **Run workflow**
+5. Once deployed, access your charts at:
+   `https://<username>.github.io/<repo>/`
+
+### Local Development
+
+```bash
+# Generate charts.json from existing SVG files
+python scripts/generate_index.py
+
+# Serve the public directory locally
+cd public && python -m http.server 8000
+```
 
 ## Features
+
+### Chart Generation
 
 - **Candlestick Charts**: Displays 5-minute candlestick bars with wicks and bodies
 - **Volume Bars**: Shows trading volume below the price chart
@@ -12,13 +48,16 @@ A Python tool that generates 5-minute candlestick charts from OHLCV (Open, High,
 - **Percentage Display**: Shows grow/fall indicator (▲/▼) with percentage change directly on the chart
 
 ## Usage
-### Specify input file:
+
+### Generate Charts
+
+Specify input file:
 
 ```bash
 python generate_chart.py example.csv
 ```
 
-### Specify output file:
+Specify output file:
 
 ```bash
 python generate_chart.py data.csv --output custom_chart.svg
@@ -55,7 +94,11 @@ The chart shows:
 
 ## Files
 
-- `generate_chart.py` - Main script
+- `generate_chart.py` - Main chart generation script
 - `spilt.py` - Utility script
 - `qqq5m.csv` - Sample data (QQQ 5-minute data)
 - `example.csv` - Example input file
+- `public/` - Web viewer files
+  - `index.html` - Main viewer page
+  - `app.js` - Viewer application logic
+  - `styles.css` - Viewer styles
