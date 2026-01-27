@@ -99,7 +99,7 @@
 
             if (chart.filename) {
                 const img = document.createElement('img');
-                img.src = 'data/chart/' + chart.filename;
+                img.src = 'data/chart/' + encodeURIComponent(chart.filename);
                 img.alt = `Chart for ${chart.date}`;
                 img.className = 'chart-image';
                 img.onload = () => {
