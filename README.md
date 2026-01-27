@@ -24,7 +24,7 @@ The included web viewer (`public/`) provides an interactive interface for browsi
    - Navigate to **Actions** → **Deploy to GitHub Pages**
    - Click **Run workflow** → **Run workflow**
 5. Once deployed, access your charts at:
-   `https://<username>.github.io/<repo>/`
+   `https://Uwater1.github.io/display/`
 
 ### Local Development
 
