@@ -65,7 +65,7 @@ def generate_candlestick_chart(csv_path: str, output_path: str = None):
     
     # Calculate price range
     price_min = int(df['low'].min()) + 1
-    price_max = int(df['high'].max())
+    price_max = int(df['high'].max()) + 1
     price_range = price_max - price_min
     
     # Calculate volume range
@@ -128,14 +128,14 @@ def generate_candlestick_chart(csv_path: str, output_path: str = None):
         if prev_row['date'] != curr_row['date']:
             x_prev = margin + 30 + (idx - 1) * bar_spacing
             x_curr = margin + 30 + idx * bar_spacing
-            gap_color = '#00ff00' if curr_row['open'] > prev_row['close'] else '#ff0000'
+            gap_color = '#00ff00' if curr_row['open'] > prev_row['close'] else '#ff2400'
             y_prev_close = price_to_y(prev_row['close'])
             y_curr_open = price_to_y(curr_row['open'])
             y_top = min(y_prev_close, y_curr_open)
             y_bottom = max(y_prev_close, y_curr_open)
             gap_height = y_bottom - y_top
             # Draw wider rectangle spanning both bars
-            svg_parts.append(f'<rect x="{x_prev}" y="{y_top}" width="{bar_spacing}" height="{gap_height}" fill="{gap_color}" opacity="0.50"/>')
+            svg_parts.append(f'<rect x="{x_prev}" y="{y_top}" width="{bar_spacing}" height="{gap_height}" fill="{gap_color}" opacity="0.60"/>')
     
     # EMA20 line (blue, starting from 21st bar)
     df['ema20'] = ta.ema(df['close'], length=20)
@@ -154,9 +154,13 @@ def generate_candlestick_chart(csv_path: str, output_path: str = None):
     for idx in range(n_bars):
         bar_time = df['time'].iloc[idx]
         minutes = bar_time.minute
+        hour = bar_time.hour
         if minutes % 30 == 0:  # 00 or 30 minutes
             x = margin + 30 + idx * bar_spacing
-            svg_parts.append(f'<line x1="{x}" y1="{margin}" x2="{x}" y2="{margin + price_height}" stroke="#666666" stroke-width="0.5" stroke-dasharray="4,4"/>')
+            svg_parts.append(f'<line x1="{x}" y1="{margin}" x2="{x}" y2="{margin * 2 + price_height}" stroke="#666666" stroke-width="0.5" stroke-dasharray="4,4" opacity="0.90"/>')
+        if hour == 15 and minutes == 55:  
+            x = margin + 30 + idx * bar_spacing
+            svg_parts.append(f'<line x1="{x+6}" y1="{30}" x2="{x+6}" y2="{margin * 3 + price_height}" stroke="black" stroke-width="0.7"/>')
     
     # X-axis labels (fewer for smaller file size)
     for idx in range(0, n_bars, 6):
