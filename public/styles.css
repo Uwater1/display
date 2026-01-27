@@ -57,7 +57,7 @@ body {
 .app-container {
     width: 100%;
     max-width: var(--max-width);
-    padding: 2rem 1.5rem;
+    padding: 1rem 1.5rem;
     display: flex;
     flex-direction: column;
     align-items: center;
@@ -68,12 +68,12 @@ body {
 .app-header {
     text-align: center;
     width: 100%;
-    padding-bottom: 0.5rem;
+    padding-bottom: 1rem;
     border-bottom: none;
 }
 
 .app-header h1 {
-    font-size: 0.75rem;
+    font-size: 1rem;
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.02em;
