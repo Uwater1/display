@@ -26,7 +26,7 @@
     --transition-fast: 0.15s ease;
     --transition-normal: 0.25s ease;
     --transition-slow: 0.4s ease;
-    --max-width: 900px;
+    --max-width: 1400px;
 }
 
 /* Reset & Base */
@@ -89,11 +89,13 @@ body {
 /* Chart Display */
 .chart-display {
     width: 100%;
+    max-width: 100%;
     background: var(--bg-secondary);
     border-radius: var(--radius-lg);
     box-shadow: var(--shadow-md);
     border: 1px solid var(--border-color);
-    overflow: hidden;
+    overflow-x: auto;
+    overflow-y: hidden;
     position: relative;
     min-height: 400px;
     display: flex;
@@ -106,8 +108,19 @@ body {
     box-shadow: var(--shadow-lg);
 }
 
+/* Chart Image - ensure full SVG is visible */
+.chart-image {
+    max-width: none;
+    width: auto;
+    height: auto;
+    max-height: 600px;
+    display: block;
+    transition: opacity var(--transition-slow), transform var(--transition-slow);
+}
+
 .chart-display svg {
-    width: 100%;
+    max-width: none;
+    width: auto;
     height: auto;
     display: block;
     transition: opacity var(--transition-slow), transform var(--transition-slow);
@@ -222,6 +235,15 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: 0.02em;
+}
+
+/* Chart Weekday */
+.chart-weekday {
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: var(--accent-primary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
 }
 
 /* Chart Change */

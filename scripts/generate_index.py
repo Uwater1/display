@@ -15,20 +15,20 @@ from pathlib import Path
 def extract_chart_info(filename: str) -> dict | None:
     """
     Extract chart information from filename.
-    
+
     Expected format: YYYY-MM-DD;DayName:+X,XX%.svg
     Example: 2024-02-13;Tue:+0,29%.svg
-    
+
     Returns:
-        dict with 'filename', 'date', and 'change' keys, or None if parsing fails.
+        dict with 'filename', 'date', 'weekday', and 'change' keys, or None if parsing fails.
     """
     # Remove .svg extension
     name_without_ext = filename.rsplit('.svg', 1)[0]
-    
+
     # Pattern to match: YYYY-MM-DD;DayName:+X,XX%
-    pattern = r'^(\d{4}-\d{2}-\d{2});[A-Za-z]{3}:([+-]?\d+,\d{2}%)$'
+    pattern = r'^(\d{4}-\d{2}-\d{2});([A-Za-z]{3}):([+-]?\d+,\d{2}%)$'
     match = re.match(pattern, name_without_ext)
-    
+
     if not match:
         # Try alternative pattern without day name
         pattern_alt = r'^(\d{4}-\d{2}-\d{2}):([+-]?\d+,\d{2}%)$'
@@ -37,14 +37,16 @@ def extract_chart_info(filename: str) -> dict | None:
             return {
                 'filename': filename,
                 'date': match.group(1),
+                'weekday': None,
                 'change': match.group(2)
             }
         return None
-    
+
     return {
         'filename': filename,
         'date': match.group(1),
-        'change': match.group(2)
+        'weekday': match.group(2),
+        'change': match.group(3)
     }
 
 
