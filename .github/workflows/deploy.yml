@@ -32,6 +32,13 @@ jobs:
       - name: Generate charts.json
         run: python scripts/generate_index.py
 
+      - name: Copy chart files to public directory
+        run: |
+          mkdir -p public/data
+          cp -r data/chart public/data/
+          echo "Copied chart files:"
+          ls -la public/data/chart/ | head -10
+
       - name: Ensure public directory exists
         run: |
           mkdir -p public
