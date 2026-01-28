@@ -18,58 +18,8 @@
         chartCounter: document.getElementById('chart-counter'),
         chartDate: document.getElementById('chart-date'),
         chartWeekday: document.getElementById('chart-weekday'),
-        chartChange: document.getElementById('chart-change'),
-        themeToggle: document.getElementById('theme-toggle')
+        chartChange: document.getElementById('chart-change')
     };
-
-    /**
-     * Theme Management
-     */
-    const THEME_STORAGE_KEY = 'financial-charts-theme';
-
-    /**
-     * Get the current theme from localStorage or default to dark
-     */
-    function getTheme() {
-        const savedTheme = localStorage.getItem(THEME_STORAGE_KEY);
-        return savedTheme === 'light' ? 'light' : 'dark';
-    }
-
-    /**
-     * Set the theme and update the UI
-     * @param {string} theme - 'light' or 'dark'
-     */
-    function setTheme(theme) {
-        const html = document.documentElement;
-        const icon = elements.themeToggle.querySelector('.theme-icon');
-
-        if (theme === 'light') {
-            html.setAttribute('data-theme', 'light');
-            icon.textContent = '☀️';
-        } else {
-            html.removeAttribute('data-theme');
-            icon.textContent = '🌙';
-        }
-
-        localStorage.setItem(THEME_STORAGE_KEY, theme);
-    }
-
-    /**
-     * Toggle between light and dark theme
-     */
-    function toggleTheme() {
-        const currentTheme = getTheme();
-        const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-        setTheme(newTheme);
-    }
-
-    /**
-     * Initialize theme on page load
-     */
-    function initTheme() {
-        const theme = getTheme();
-        setTheme(theme);
-    }
 
     /**
      * Get the initial chart index from URL query parameter
@@ -281,16 +231,12 @@
             // Get initial index from URL or default to first chart
             currentIndex = getInitialIndex();
 
-            // Initialize theme
-            initTheme();
-
             // Update URL to match current state
             updateURL(currentIndex);
 
             // Set up event listeners
             elements.prevBtn.addEventListener('click', goToPrevious);
             elements.nextBtn.addEventListener('click', goToNext);
-            elements.themeToggle.addEventListener('click', toggleTheme);
             document.addEventListener('keydown', handleKeyboardNavigation);
             window.addEventListener('popstate', handlePopState);
 
