@@ -29,6 +29,25 @@
     --max-width: 1400px;
 }
 
+/* Light Mode Variables - softer, warmer tones */
+[data-theme="light"] {
+    --bg-primary: #e8e4dc;
+    --bg-secondary: #f0ebe3;
+    --bg-card: #e5e0d8;
+    --text-primary: #2d2a26;
+    --text-secondary: #5a5650;
+    --text-muted: #8a8680;
+    --accent-primary: #2563eb;
+    --accent-hover: #3b82f6;
+    --accent-glow: rgba(37, 99, 235, 0.2);
+    --success: #16a34a;
+    --danger: #dc2626;
+    --border-color: #c4c0b8;
+    --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.08);
+    --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.1);
+    --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+}
+
 /* Reset & Base */
 *, *::before, *::after {
     box-sizing: border-box;
@@ -66,7 +85,9 @@ body {
 
 /* Header */
 .app-header {
-    text-align: center;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
     width: 100%;
     padding-bottom: 1rem;
     border-bottom: none;
@@ -77,6 +98,50 @@ body {
     font-weight: 600;
     color: var(--text-primary);
     letter-spacing: -0.02em;
+}
+
+/* Theme Toggle Button */
+.theme-toggle {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    background: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    color: var(--text-primary);
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    font-size: 1.2rem;
+    line-height: 1;
+}
+
+.theme-toggle:hover {
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    transform: translateY(-1px);
+    box-shadow: 0 0 12px var(--accent-glow);
+}
+
+.theme-toggle:active {
+    transform: translateY(0);
+    box-shadow: none;
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent-primary);
+    outline-offset: 2px;
+}
+
+.theme-icon {
+    display: block;
+    transition: transform var(--transition-normal);
+}
+
+.theme-toggle:hover .theme-icon {
+    transform: scale(1.1);
 }
 
 /* Chart Container */
