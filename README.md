@@ -30,16 +30,32 @@ cd public && python -m http.server 8000
 
 ## Usage
 
+### Core Operations
 ```bash
 # Generate chart
 python generate_chart.py data.csv
 
 # Custom output
 python generate_chart.py data.csv --output chart.svg
-```
 
 ## CSV Format
 Required columns: `time`, `open`, `high`, `low`, `close`, `Volume`
+```
+
+### Analysis Tools
+```bash
+# Compare Intraday vs Overnight vs Buy & Hold
+python strategy_comparison.py
+
+# Run weekly performance analysis
+python weekday_analysis.py
+
+# Run monthly performance analysis
+python monthly_analysis.py
+
+# Show extended stats (Correlations, Seasonality, patterns)
+python extended_stats.py
+```
 
 ## Files
 - `generate_chart.py` - Main script
