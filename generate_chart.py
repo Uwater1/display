@@ -14,7 +14,7 @@ def calculate_ema(prices, period):
     return ta.ema(prices, length=period)
 
 
-def generate_candlestick_chart(csv_path: str, output_path: str = None):
+def generate_candlestick_chart(csv_path: str = None, output_path: str = None, df: pd.DataFrame = None):
     """
     Generate a candlestick chart from OHLCV data and save as SVG.
     Removes gaps between trading sessions (only shows active trading periods).
@@ -22,12 +22,19 @@ def generate_candlestick_chart(csv_path: str, output_path: str = None):
     Args:
         csv_path: Path to the CSV file with OHLCV data
         output_path: Optional output path. If None, uses last candle date and percentage change.
+        df: Optional DataFrame with OHLCV data. If provided, csv_path is ignored.
     
     Returns:
         tuple: (path to the saved SVG file, percentage_change)
     """
-    # Read the CSV file
-    df = pd.read_csv(csv_path)
+    if df is None:
+        if csv_path is None:
+            raise ValueError("Either csv_path or df must be provided")
+        # Read the CSV file
+        df = pd.read_csv(csv_path)
+    else:
+        # Create a copy to avoid modifying the original dataframe
+        df = df.copy()
     
     # Parse the datetime column
     df['time'] = pd.to_datetime(df['time'])
