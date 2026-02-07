@@ -7,77 +7,82 @@
     <meta name="theme-color" content="#1a1a2e">
     <title>Financial Market Analysis</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="app" class="app-container">
-        <header class="app-header">
-            <div class="header-top">
-                <h1>Market Analysis</h1>
-                <div class="ticker-selector" id="ticker-selector">
-                    <button class="ticker-btn active" data-ticker="IVV">IVV</button>
-                    <button class="ticker-btn" data-ticker="QQQM">QQQM</button>
-                    <button class="ticker-btn" data-ticker="VUG">VUG</button>
-                </div>
+
+        <!-- Header (Only visible in sub-views) -->
+        <header class="app-header hidden" id="app-header">
+            <div class="header-left">
+                <button id="back-btn" class="nav-btn">← Back</button>
             </div>
-            <nav class="view-nav" id="view-nav">
-                <button class="view-btn active" data-view="stats">Statistics</button>
-                <button class="view-btn" data-view="charts">Daily Charts</button>
-            </nav>
+            <h1 id="header-title">Market Analysis</h1>
+            <div class="header-right">
+                <!-- Ticker displayed here in views -->
+                <span id="current-ticker-display" class="ticker-badge">IVV</span>
+            </div>
         </header>
 
         <main id="main-content">
+
+            <!-- Landing Page -->
+            <section id="landing-view" class="view-section active">
+                <div class="landing-content">
+                    <h1>Market Analysis</h1>
+
+                    <div class="ticker-selection">
+                        <label>Select Ticker:</label>
+                        <div class="ticker-selector-large" id="ticker-selector-landing">
+                            <button class="ticker-btn-large active" data-ticker="IVV">IVV</button>
+                            <button class="ticker-btn-large" data-ticker="QQQM">QQQM</button>
+                            <button class="ticker-btn-large" data-ticker="VUG">VUG</button>
+                        </div>
+                    </div>
+
+                    <div class="action-buttons">
+                        <button class="action-btn" data-target="charts">
+                            <span class="icon">📈</span>
+                            <span class="text">Historical Charts</span>
+                        </button>
+                        <button class="action-btn" data-target="stats">
+                            <span class="icon">📊</span>
+                            <span class="text">Daily Statistics</span>
+                        </button>
+                    </div>
+                </div>
+            </section>
+
             <!-- Statistics View -->
-            <section id="stats-view" class="view-section active">
-                <div class="stats-grid">
-                    <div class="card strategy-card">
-                        <h2>Intraday vs Overnight</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="strategyChart"></canvas>
-                        </div>
-                        <div class="stats-summary" id="strategy-summary">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                    <div class="card weekday-card">
-                        <h2>Day of Week Performance</h2>
-                         <div class="chart-wrapper">
-                            <canvas id="weekdayChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="card monthly-card">
-                        <h2>Monthly Performance</h2>
-                         <div class="chart-wrapper">
-                            <canvas id="monthlyChart"></canvas>
-                        </div>
-                    </div>
+            <section id="stats-view" class="view-section">
+                <div class="stats-container" id="stats-container">
+                    <!-- Stats images populated by JS -->
+                    <div class="loading">Loading Statistics...</div>
                 </div>
             </section>
 
             <!-- Charts View -->
             <section id="charts-view" class="view-section">
-                <div class="chart-controls">
-                    <select id="date-selector" class="date-selector">
-                        <option value="">Select Date...</option>
-                    </select>
-                </div>
+                <div class="chart-viewer-layout">
+                    <div class="chart-controls">
+                        <select id="date-selector" class="date-selector">
+                            <option value="">Select Date...</option>
+                        </select>
+                        <div class="chart-info-inline">
+                            <span id="chart-date">--</span>
+                            <span id="chart-change">--</span>
+                        </div>
+                    </div>
 
-                <div class="chart-display-container">
-                    <div id="chart-display" class="chart-display">
-                        <div class="placeholder">Select a date to view chart</div>
+                    <div class="chart-display-container">
+                        <div id="chart-display" class="chart-display">
+                            <div class="placeholder">Select a date to view chart</div>
+                        </div>
+
+                        <!-- Overlay Navigation Buttons -->
+                        <button id="prev-chart-btn" class="chart-nav-overlay prev" title="Previous (Left Arrow)">‹</button>
+                        <button id="next-chart-btn" class="chart-nav-overlay next" title="Next (Right Arrow)">›</button>
                     </div>
                 </div>
-
-                <nav class="chart-navigation">
-                    <button id="prev-btn" class="nav-btn">← Previous</button>
-                    <div class="chart-info">
-                        <span id="chart-date">--</span>
-                        <span id="chart-change">--</span>
-                    </div>
-                    <button id="next-btn" class="nav-btn">Next →</button>
-                </nav>
             </section>
         </main>
     </div>
