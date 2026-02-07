@@ -1,0 +1,38 @@
+[
+  {
+    "id": "total_return",
+    "title": "Total Return Comparison",
+    "description": "Compares the total cumulative return of three strategies: Intraday (Open to Close), Overnight (Close to Next Open), and Buy & Hold (Close to Close) over the entire available history.",
+    "image": "data/IVV/stats/total_return.png"
+  },
+  {
+    "id": "avg_return_weekday",
+    "title": "Average Return by Day of Week",
+    "description": "Shows the average daily return for each day of the week, broken down by Intraday and Overnight sessions.",
+    "image": "data/IVV/stats/avg_return_weekday.png"
+  },
+  {
+    "id": "win_rate_weekday",
+    "title": "Win Rate by Day of Week",
+    "description": "The percentage of days where the return was positive, categorized by day of the week and session.",
+    "image": "data/IVV/stats/win_rate_weekday.png"
+  },
+  {
+    "id": "monthly_seasonality",
+    "title": "Monthly Seasonality",
+    "description": "Average daily return for each month of the year, indicating potential seasonal trends.",
+    "image": "data/IVV/stats/monthly_seasonality.png"
+  },
+  {
+    "id": "cumulative_growth",
+    "title": "Cumulative Growth Comparison",
+    "description": "Growth of a hypothetical $1 investment over time for Buy & Hold, Intraday, and Overnight strategies.",
+    "image": "data/IVV/stats/cumulative_growth.png"
+  },
+  {
+    "id": "rolling_volatility",
+    "title": "Rolling Volatility",
+    "description": "30-day rolling standard deviation of returns (annualized), showing how risk/volatility changes over time for each session.",
+    "image": "data/IVV/stats/rolling_volatility.png"
+  }
+]

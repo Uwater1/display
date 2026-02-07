@@ -1,0 +1,114 @@
+{
+  "ticker": "IVV",
+  "strategies": {
+    "intraday": {
+      "total_return": 0.3846431870888767,
+      "avg_daily_return": 9.684388697485651e-05,
+      "win_rate": 0.532395237358899
+    },
+    "overnight": {
+      "total_return": 4.489612221041742,
+      "avg_daily_return": 0.0002881993668098099,
+      "win_rate": 0.5546621308179991
+    }
+  },
+  "day_of_week": [
+    {
+      "day": "Monday",
+      "intraday_avg": 0.0001717616207626088,
+      "overnight_avg": 0.0006407101794421302,
+      "intraday_win_rate": 0.5432811211871393,
+      "overnight_win_rate": 0.5548227535037098
+    },
+    {
+      "day": "Tuesday",
+      "intraday_avg": 1.0536293022933588e-05,
+      "overnight_avg": 0.000258905923296759,
+      "intraday_win_rate": 0.5259984928409948,
+      "overnight_win_rate": 0.557648831951771
+    },
+    {
+      "day": "Wednesday",
+      "intraday_avg": 0.0002621280543939509,
+      "overnight_avg": 0.00020510973007722343,
+      "intraday_win_rate": 0.5395629238884703,
+      "overnight_win_rate": 0.5433308214016579
+    },
+    {
+      "day": "Thursday",
+      "intraday_avg": 7.62400175608136e-05,
+      "overnight_avg": 0.00019947534011797535,
+      "intraday_win_rate": 0.536510376633359,
+      "overnight_win_rate": 0.5680245964642583
+    },
+    {
+      "day": "Friday",
+      "intraday_avg": -3.315726003654464e-05,
+      "overnight_avg": 0.00016269258504617118,
+      "intraday_win_rate": 0.5173210161662818,
+      "overnight_win_rate": 0.5496535796766744
+    }
+  ],
+  "monthly": [
+    {
+      "month": "January",
+      "intraday_avg": 5.1370126617342477e-05,
+      "overnight_avg": -1.9046331741448273e-05
+    },
+    {
+      "month": "February",
+      "intraday_avg": 0.00023060864132139577,
+      "overnight_avg": -0.000336757174427185
+    },
+    {
+      "month": "March",
+      "intraday_avg": 0.00044189917971173556,
+      "overnight_avg": -6.401093354480708e-05
+    },
+    {
+      "month": "April",
+      "intraday_avg": 0.0002358443141123893,
+      "overnight_avg": 0.0007311597998269848
+    },
+    {
+      "month": "May",
+      "intraday_avg": 0.0002476080243236656,
+      "overnight_avg": 0.00024289552653963792
+    },
+    {
+      "month": "June",
+      "intraday_avg": -0.00035747528688695045,
+      "overnight_avg": 0.00042026458289619903
+    },
+    {
+      "month": "July",
+      "intraday_avg": 0.00032497052564409796,
+      "overnight_avg": 0.0004965884693952231
+    },
+    {
+      "month": "August",
+      "intraday_avg": 0.0001747599137791163,
+      "overnight_avg": -9.072961100880149e-05
+    },
+    {
+      "month": "September",
+      "intraday_avg": -0.0005032046888438907,
+      "overnight_avg": 2.1938481471512733e-05
+    },
+    {
+      "month": "October",
+      "intraday_avg": 0.0003299916127554587,
+      "overnight_avg": 0.00035523831577089485
+    },
+    {
+      "month": "November",
+      "intraday_avg": 0.0004447226941421447,
+      "overnight_avg": 0.0007896346383071453
+    },
+    {
+      "month": "December",
+      "intraday_avg": -0.0004604493702099695,
+      "overnight_avg": 0.0008683807885617037
+    }
+  ]
+}
