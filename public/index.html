@@ -3,83 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Financial Chart Viewer & Statistics">
+    <meta name="description" content="Financial Chart Viewer - SVG Chart Display with Pagination">
     <meta name="theme-color" content="#1a1a2e">
-    <title>Financial Market Analysis</title>
+    <title>Financial Charts</title>
     <link rel="stylesheet" href="styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
 <body>
     <div id="app" class="app-container">
         <header class="app-header">
-            <div class="header-top">
-                <h1>Market Analysis</h1>
-                <div class="ticker-selector" id="ticker-selector">
-                    <button class="ticker-btn active" data-ticker="IVV">IVV</button>
-                    <button class="ticker-btn" data-ticker="QQQM">QQQM</button>
-                    <button class="ticker-btn" data-ticker="VUG">VUG</button>
-                </div>
-            </div>
-            <nav class="view-nav" id="view-nav">
-                <button class="view-btn active" data-view="stats">Statistics</button>
-                <button class="view-btn" data-view="charts">Daily Charts</button>
-            </nav>
+            <h1>Financial Charts</h1>
         </header>
 
-        <main id="main-content">
-            <!-- Statistics View -->
-            <section id="stats-view" class="view-section active">
-                <div class="stats-grid">
-                    <div class="card strategy-card">
-                        <h2>Intraday vs Overnight</h2>
-                        <div class="chart-wrapper">
-                            <canvas id="strategyChart"></canvas>
-                        </div>
-                        <div class="stats-summary" id="strategy-summary">
-                            <!-- Populated by JS -->
-                        </div>
-                    </div>
-
-                    <div class="card weekday-card">
-                        <h2>Day of Week Performance</h2>
-                         <div class="chart-wrapper">
-                            <canvas id="weekdayChart"></canvas>
-                        </div>
-                    </div>
-
-                    <div class="card monthly-card">
-                        <h2>Monthly Performance</h2>
-                         <div class="chart-wrapper">
-                            <canvas id="monthlyChart"></canvas>
-                        </div>
-                    </div>
-                </div>
-            </section>
-
-            <!-- Charts View -->
-            <section id="charts-view" class="view-section">
-                <div class="chart-controls">
-                    <select id="date-selector" class="date-selector">
-                        <option value="">Select Date...</option>
-                    </select>
-                </div>
-
-                <div class="chart-display-container">
-                    <div id="chart-display" class="chart-display">
-                        <div class="placeholder">Select a date to view chart</div>
-                    </div>
-                </div>
-
-                <nav class="chart-navigation">
-                    <button id="prev-btn" class="nav-btn">← Previous</button>
-                    <div class="chart-info">
-                        <span id="chart-date">--</span>
-                        <span id="chart-change">--</span>
-                    </div>
-                    <button id="next-btn" class="nav-btn">Next →</button>
-                </nav>
-            </section>
+        <main class="chart-container">
+            <div id="chart-display" class="chart-display">
+                <!-- SVG chart will be loaded here -->
+                <div class="loading">Loading chart...</div>
+            </div>
         </main>
+
+        <nav class="navigation">
+            <button id="prev-btn" class="nav-btn" aria-label="Previous Chart">
+                <span class="nav-icon">←</span>
+                <span class="nav-text">Previous</span>
+            </button>
+
+            <div class="chart-info">
+                <div id="chart-counter" class="chart-counter">Chart 1 of 1</div>
+                <div class="chart-details">
+                    <span id="chart-date" class="chart-date">--</span>
+                    <span id="chart-weekday" class="chart-weekday">--</span>
+                    <span id="chart-change" class="chart-change">--</span>
+                </div>
+            </div>
+
+            <button id="next-btn" class="nav-btn" aria-label="Next Chart">
+                <span class="nav-text">Next</span>
+                <span class="nav-icon">→</span>
+            </button>
+        </nav>
     </div>
 
     <script src="app.js"></script>

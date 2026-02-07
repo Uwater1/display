@@ -1,374 +1,259 @@
 /**
- * Financial Market Analysis App
+ * Financial Charts Viewer
+ * Main application JavaScript for GitHub Pages chart viewer
  */
 
 (function() {
     'use strict';
 
     // State
-    const state = {
-        currentTicker: 'IVV',
-        currentView: 'stats',
-        charts: [],
-        currentChartIndex: 0,
-        stats: null,
-        chartInstances: {
-            strategy: null,
-            weekday: null,
-            monthly: null
-        }
-    };
+    let charts = [];
+    let currentIndex = 0;
 
     // DOM Elements
     const elements = {
-        tickerBtns: document.querySelectorAll('.ticker-btn'),
-        viewBtns: document.querySelectorAll('.view-btn'),
-        viewSections: document.querySelectorAll('.view-section'),
-
-        // Stats View
-        strategyChart: document.getElementById('strategyChart'),
-        weekdayChart: document.getElementById('weekdayChart'),
-        monthlyChart: document.getElementById('monthlyChart'),
-        strategySummary: document.getElementById('strategy-summary'),
-
-        // Charts View
-        dateSelector: document.getElementById('date-selector'),
         chartDisplay: document.getElementById('chart-display'),
         prevBtn: document.getElementById('prev-btn'),
         nextBtn: document.getElementById('next-btn'),
+        chartCounter: document.getElementById('chart-counter'),
         chartDate: document.getElementById('chart-date'),
+        chartWeekday: document.getElementById('chart-weekday'),
         chartChange: document.getElementById('chart-change')
     };
 
-    // --- Initialization ---
+    /**
+     * Get the initial chart index from URL query parameter
+     * Defaults to the first chart if not specified or invalid
+     */
+    function getInitialIndex() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const indexParam = urlParams.get('i');
 
-    async function init() {
-        setupEventListeners();
-        await loadData(state.currentTicker);
+        if (indexParam !== null) {
+            const parsedIndex = parseInt(indexParam, 10);
+            if (!isNaN(parsedIndex) && parsedIndex >= 0 && parsedIndex < charts.length) {
+                return parsedIndex;
+            }
+        }
+
+        // Default to first chart
+        return 0;
     }
 
-    function setupEventListeners() {
-        // Ticker Selection
-        elements.tickerBtns.forEach(btn => {
-            btn.addEventListener('click', async (e) => {
-                const ticker = e.target.dataset.ticker;
-                if (ticker !== state.currentTicker) {
-                    updateActiveButton(elements.tickerBtns, e.target);
-                    state.currentTicker = ticker;
-                    await loadData(ticker);
-                }
-            });
-        });
-
-        // View Selection
-        elements.viewBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                const view = e.target.dataset.view;
-                if (view !== state.currentView) {
-                    updateActiveButton(elements.viewBtns, e.target);
-                    switchView(view);
-                }
-            });
-        });
-
-        // Chart Navigation
-        elements.dateSelector.addEventListener('change', (e) => {
-            const index = parseInt(e.target.value, 10);
-            if (!isNaN(index)) {
-                renderDailyChart(index);
-            }
-        });
-
-        elements.prevBtn.addEventListener('click', () => {
-            if (state.currentChartIndex > 0) {
-                renderDailyChart(state.currentChartIndex - 1);
-            }
-        });
-
-        elements.nextBtn.addEventListener('click', () => {
-            if (state.currentChartIndex < state.charts.length - 1) {
-                renderDailyChart(state.currentChartIndex + 1);
-            }
-        });
-
-        // Keyboard Navigation
-        document.addEventListener('keydown', (e) => {
-            if (state.currentView === 'charts') {
-                if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
-                    if (state.currentChartIndex > 0) renderDailyChart(state.currentChartIndex - 1);
-                } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
-                    if (state.currentChartIndex < state.charts.length - 1) renderDailyChart(state.currentChartIndex + 1);
-                }
-            }
-        });
+    /**
+     * Update the URL with the current chart index
+     * @param {number} index - The chart index to set in URL
+     */
+    function updateURL(index) {
+        const newURL = `${window.location.pathname}?i=${index}`;
+        history.replaceState({ index: index }, '', newURL);
     }
 
-    function updateActiveButton(group, target) {
-        group.forEach(btn => btn.classList.remove('active'));
-        target.classList.add('active');
-    }
+    /**
+     * Update the navigation UI with current chart information
+     */
+    function updateNavigationUI() {
+        const chart = charts[currentIndex];
 
-    function switchView(viewName) {
-        state.currentView = viewName;
-        elements.viewSections.forEach(section => {
-            section.classList.remove('active');
-            if (section.id === `${viewName}-view`) {
-                section.classList.add('active');
+        // Update counter (1-based index for display)
+        elements.chartCounter.textContent = `Chart ${currentIndex + 1} of ${charts.length}`;
+
+        // Update date
+        elements.chartDate.textContent = chart.date || '--';
+
+        // Update weekday
+        elements.chartWeekday.textContent = chart.weekday || '';
+
+        // Update change percentage
+        elements.chartChange.textContent = chart.change || '--';
+        // Style the change based on positive/negative value
+        if (chart.change) {
+            const isPositive = chart.change.startsWith('+');
+            const isNegative = chart.change.startsWith('-');
+            elements.chartChange.classList.remove('positive', 'negative');
+            if (isPositive) {
+                elements.chartChange.classList.add('positive');
+            } else if (isNegative) {
+                elements.chartChange.classList.add('negative');
             }
-        });
+        } else {
+            elements.chartChange.classList.remove('positive', 'negative');
+        }
+
+        // Update button states
+        elements.prevBtn.disabled = currentIndex === 0;
+        elements.nextBtn.disabled = currentIndex === charts.length - 1;
     }
 
-    // --- Data Loading ---
+    /**
+     * Render the current chart with smooth transition
+     */
+    function renderChart() {
+        const chart = charts[currentIndex];
 
-    async function loadData(ticker) {
-        try {
-            // Load Stats
-            const statsRes = await fetch(`data/stats_${ticker}.json`);
-            state.stats = await statsRes.json();
+        // Add transition class for smooth animation
+        elements.chartDisplay.classList.add('transitioning');
 
-            // Load Charts List
-            const chartsRes = await fetch(`data/charts_${ticker}.json`);
-            state.charts = await chartsRes.json();
+        // Fade out
+        elements.chartDisplay.style.opacity = '0';
 
-            // Reset Chart View
-            state.currentChartIndex = 0;
-            populateDateSelector();
+        setTimeout(() => {
+            // Clear and render new chart
+            elements.chartDisplay.innerHTML = '';
 
-            // Render Current View
-            if (state.currentView === 'stats') {
-                renderStats();
+            if (chart.filename) {
+                const img = document.createElement('img');
+                img.src = 'data/chart/' + encodeURIComponent(chart.filename);
+                img.alt = `Chart for ${chart.date}`;
+                img.className = 'chart-image';
+                img.onload = () => {
+                    // Fade in after image loads
+                    elements.chartDisplay.style.opacity = '1';
+                    elements.chartDisplay.classList.remove('transitioning');
+                };
+                img.onerror = () => {
+                    elements.chartDisplay.innerHTML = '<div class="error">Failed to load chart</div>';
+                    elements.chartDisplay.style.opacity = '1';
+                    elements.chartDisplay.classList.remove('transitioning');
+                };
+                elements.chartDisplay.appendChild(img);
             } else {
-                renderDailyChart(0);
+                elements.chartDisplay.innerHTML = '<div class="error">No chart data available</div>';
+                elements.chartDisplay.style.opacity = '1';
+                elements.chartDisplay.classList.remove('transitioning');
             }
+        }, 150);
+    }
 
-            // Always render stats charts to be ready when switching
-            renderStats();
-
-        } catch (error) {
-            console.error('Error loading data:', error);
-            alert('Failed to load data for ' + ticker);
+    /**
+     * Navigate to the previous chart
+     */
+    function goToPrevious() {
+        if (currentIndex > 0) {
+            currentIndex--;
+            updateURL(currentIndex);
+            renderChart();
+            updateNavigationUI();
         }
     }
 
-    // --- Statistics Rendering ---
-
-    function renderStats() {
-        if (!state.stats) return;
-
-        renderStrategyChart();
-        renderWeekdayChart();
-        renderMonthlyChart();
-        renderStrategySummary();
-    }
-
-    function renderStrategySummary() {
-        const s = state.stats.strategies;
-        const intraReturn = (s.intraday.total_return * 100).toFixed(2);
-        const overReturn = (s.overnight.total_return * 100).toFixed(2);
-
-        elements.strategySummary.innerHTML = `
-            <div class="summary-item">
-                <span class="label">Intraday (9:30-16:00)</span>
-                <span class="value ${s.intraday.total_return >= 0 ? 'pos' : 'neg'}">${intraReturn}%</span>
-                <div class="sub-text">Win Rate: ${(s.intraday.win_rate * 100).toFixed(1)}%</div>
-            </div>
-            <div class="summary-item">
-                <span class="label">Overnight (16:00-9:30)</span>
-                <span class="value ${s.overnight.total_return >= 0 ? 'pos' : 'neg'}">${overReturn}%</span>
-                <div class="sub-text">Win Rate: ${(s.overnight.win_rate * 100).toFixed(1)}%</div>
-            </div>
-        `;
-    }
-
-    function renderStrategyChart() {
-        const ctx = elements.strategyChart.getContext('2d');
-        const s = state.stats.strategies;
-
-        if (state.chartInstances.strategy) {
-            state.chartInstances.strategy.destroy();
+    /**
+     * Navigate to the next chart
+     */
+    function goToNext() {
+        if (currentIndex < charts.length - 1) {
+            currentIndex++;
+            updateURL(currentIndex);
+            renderChart();
+            updateNavigationUI();
         }
-
-        state.chartInstances.strategy = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: ['Intraday', 'Overnight'],
-                datasets: [{
-                    label: 'Total Return (%)',
-                    data: [s.intraday.total_return * 100, s.overnight.total_return * 100],
-                    backgroundColor: [
-                        'rgba(54, 162, 235, 0.7)',
-                        'rgba(255, 99, 132, 0.7)'
-                    ],
-                    borderColor: [
-                        'rgba(54, 162, 235, 1)',
-                        'rgba(255, 99, 132, 1)'
-                    ],
-                    borderWidth: 1
-                }]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        beginAtZero: true,
-                        ticks: { color: '#e0e0e0' },
-                        grid: { color: '#333' }
-                    },
-                    x: {
-                        ticks: { color: '#e0e0e0' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { display: false }
-                }
-            }
-        });
     }
 
-    function renderWeekdayChart() {
-        const ctx = elements.weekdayChart.getContext('2d');
-        const data = state.stats.day_of_week;
-
-        if (state.chartInstances.weekday) {
-            state.chartInstances.weekday.destroy();
+    /**
+     * Navigate to a specific chart index
+     * @param {number} index - The target chart index
+     */
+    function goToChart(index) {
+        if (index >= 0 && index < charts.length && index !== currentIndex) {
+            currentIndex = index;
+            updateURL(currentIndex);
+            renderChart();
+            updateNavigationUI();
         }
-
-        state.chartInstances.weekday = new Chart(ctx, {
-            type: 'bar',
-            data: {
-                labels: data.map(d => d.day.substring(0, 3)),
-                datasets: [
-                    {
-                        label: 'Intraday Avg (%)',
-                        data: data.map(d => d.intraday_avg * 100),
-                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
-                    },
-                    {
-                        label: 'Overnight Avg (%)',
-                        data: data.map(d => d.overnight_avg * 100),
-                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        ticks: { color: '#e0e0e0' },
-                        grid: { color: '#333' }
-                    },
-                    x: {
-                        ticks: { color: '#e0e0e0' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { labels: { color: '#e0e0e0' } }
-                }
-            }
-        });
     }
 
-    function renderMonthlyChart() {
-        const ctx = elements.monthlyChart.getContext('2d');
-        const data = state.stats.monthly;
-
-        if (state.chartInstances.monthly) {
-            state.chartInstances.monthly.destroy();
-        }
-
-        state.chartInstances.monthly = new Chart(ctx, {
-            type: 'line',
-            data: {
-                labels: data.map(d => d.month.substring(0, 3)),
-                datasets: [
-                    {
-                        label: 'Intraday Avg (%)',
-                        data: data.map(d => d.intraday_avg * 100),
-                        borderColor: 'rgba(54, 162, 235, 1)',
-                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
-                        tension: 0.1
-                    },
-                    {
-                        label: 'Overnight Avg (%)',
-                        data: data.map(d => d.overnight_avg * 100),
-                        borderColor: 'rgba(255, 99, 132, 1)',
-                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
-                        tension: 0.1
-                    }
-                ]
-            },
-            options: {
-                responsive: true,
-                maintainAspectRatio: false,
-                scales: {
-                    y: {
-                        ticks: { color: '#e0e0e0' },
-                        grid: { color: '#333' }
-                    },
-                    x: {
-                        ticks: { color: '#e0e0e0' },
-                        grid: { display: false }
-                    }
-                },
-                plugins: {
-                    legend: { labels: { color: '#e0e0e0' } }
-                }
-            }
-        });
-    }
-
-    // --- Daily Charts Rendering ---
-
-    function populateDateSelector() {
-        elements.dateSelector.innerHTML = '';
-        state.charts.forEach((chart, index) => {
-            const option = document.createElement('option');
-            option.value = index;
-            option.textContent = `${chart.date} (${chart.weekday}) - ${chart.change}`;
-            elements.dateSelector.appendChild(option);
-        });
-    }
-
-    function renderDailyChart(index) {
-        if (state.charts.length === 0) {
-            elements.chartDisplay.innerHTML = '<div class="placeholder">No charts available</div>';
+    /**
+     * Handle keyboard navigation
+     * @param {KeyboardEvent} event - The keyboard event
+     */
+    function handleKeyboardNavigation(event) {
+        // Ignore if user is typing in an input
+        if (event.target.tagName === 'INPUT' || event.target.tagName === 'TEXTAREA') {
             return;
         }
 
-        state.currentChartIndex = index;
-        const chart = state.charts[index];
-
-        // Update UI
-        elements.dateSelector.value = index;
-        elements.chartDate.textContent = `${chart.date} (${chart.weekday})`;
-        elements.chartChange.textContent = chart.change;
-        elements.chartChange.className = chart.change.includes('+') ? 'pos' : 'neg';
-
-        elements.prevBtn.disabled = index === 0;
-        elements.nextBtn.disabled = index === state.charts.length - 1;
-
-        // Render SVG
-        const imgPath = `data/${state.currentTicker}/charts/${chart.filename}`;
-
-        elements.chartDisplay.innerHTML = '<div class="loading">Loading...</div>';
-
-        const img = new Image();
-        img.onload = () => {
-            elements.chartDisplay.innerHTML = '';
-            elements.chartDisplay.appendChild(img);
-        };
-        img.onerror = () => {
-            elements.chartDisplay.innerHTML = '<div class="error">Failed to load chart</div>';
-        };
-        img.src = imgPath;
-        img.className = 'chart-svg';
+        switch (event.key) {
+            case 'ArrowLeft':
+            case 'a':
+            case 'A':
+                event.preventDefault();
+                goToPrevious();
+                break;
+            case 'ArrowRight':
+            case 'd':
+            case 'D':
+                event.preventDefault();
+                goToNext();
+                break;
+            case 'Home':
+                event.preventDefault();
+                goToChart(0);
+                break;
+            case 'End':
+                event.preventDefault();
+                goToChart(charts.length - 1);
+                break;
+        }
     }
 
-    // Initialize
-    document.addEventListener('DOMContentLoaded', init);
+    /**
+     * Handle browser back/forward navigation
+     * @param {PopStateEvent} event - The popstate event
+     */
+    function handlePopState(event) {
+        if (event.state && typeof event.state.index === 'number') {
+            const newIndex = event.state.index;
+            if (newIndex >= 0 && newIndex < charts.length) {
+                currentIndex = newIndex;
+                renderChart();
+                updateNavigationUI();
+            }
+        }
+    }
 
+    /**
+     * Initialize the application
+     */
+    async function init() {
+        try {
+            // Fetch charts data
+            const response = await fetch('charts.json');
+            if (!response.ok) {
+                throw new Error(`Failed to fetch charts: ${response.status}`);
+            }
+
+            charts = await response.json();
+
+            if (!Array.isArray(charts) || charts.length === 0) {
+                throw new Error('No charts available');
+            }
+
+            // Get initial index from URL or default to first chart
+            currentIndex = getInitialIndex();
+
+            // Update URL to match current state
+            updateURL(currentIndex);
+
+            // Set up event listeners
+            elements.prevBtn.addEventListener('click', goToPrevious);
+            elements.nextBtn.addEventListener('click', goToNext);
+            document.addEventListener('keydown', handleKeyboardNavigation);
+            window.addEventListener('popstate', handlePopState);
+
+            // Initial render
+            renderChart();
+            updateNavigationUI();
+
+        } catch (error) {
+            console.error('Failed to initialize chart viewer:', error);
+            elements.chartDisplay.innerHTML = `<div class="error">Error loading charts: ${error.message}</div>`;
+        }
+    }
+
+    // Start the application when DOM is ready
+    if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', init);
+    } else {
+        init();
+    }
 })();

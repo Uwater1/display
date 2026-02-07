@@ -7,11 +7,8 @@ A Python tool that generates 5-minute candlestick charts from OHLCV CSV data wit
 ## Quick Start
 
 ```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Fetch data and generate charts
-python fetch_and_process.py
+# Generate a chart
+python generate_chart.py example.csv
 
 # View locally
 cd public && python -m http.server 8000
@@ -30,29 +27,25 @@ cd public && python -m http.server 8000
 - Keyboard navigation (A/D or arrow keys)
 - URL sharing for specific charts
 - Responsive design
-- **New**: Statistics dashboard for Intraday vs Overnight returns
-- **New**: Day of Week and Monthly performance analysis
-- **New**: Ticker selection (IVV, QQQM, VUG)
 
 ## Usage
 
 ```bash
-# Fetch data for configured tickers (IVV, QQQM, VUG)
-python fetch_and_process.py
+# Generate chart
+python generate_chart.py data.csv
 
-# Generate single chart manually
+# Custom output
 python generate_chart.py data.csv --output chart.svg
 ```
 
-## CSV Format (for manual chart generation)
+## CSV Format
 Required columns: `time`, `open`, `high`, `low`, `close`, `Volume`
 
 ## Files
-- `fetch_and_process.py` - Main data fetching and processing script
-- `generate_chart.py` - Chart generation module
-- `public/` - Web viewer frontend
+- `generate_chart.py` - Main script
+- `public/` - Web viewer
 - `example.csv` - Sample data
 
-## License
+## Lisence
 
 This project is licensed under the AGNU License - see the [LICENSE](LICENSE) file for details.
