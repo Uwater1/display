@@ -1,5 +1,5 @@
 /**
- * Financial Market Analysis App - V3
+ * Financial Market Analysis App
  */
 
 (function() {
@@ -8,74 +8,67 @@
     // State
     const state = {
         currentTicker: 'IVV',
-        currentView: 'landing', // 'landing', 'stats', 'charts'
+        currentView: 'stats',
         charts: [],
         currentChartIndex: 0,
-        statsManifest: null,
-        preloadImages: []
+        stats: null,
+        chartInstances: {
+            strategy: null,
+            weekday: null,
+            monthly: null
+        }
     };
 
     // DOM Elements
     const elements = {
-        appHeader: document.getElementById('app-header'),
-        headerTitle: document.getElementById('header-title'),
-        currentTickerDisplay: document.getElementById('current-ticker-display'),
-        backBtn: document.getElementById('back-btn'),
-
-        // Landing View
-        landingView: document.getElementById('landing-view'),
-        tickerBtns: document.querySelectorAll('.ticker-btn-large'),
-        actionBtns: document.querySelectorAll('.action-btn'),
+        tickerBtns: document.querySelectorAll('.ticker-btn'),
+        viewBtns: document.querySelectorAll('.view-btn'),
+        viewSections: document.querySelectorAll('.view-section'),
 
         // Stats View
-        statsView: document.getElementById('stats-view'),
-        statsContainer: document.getElementById('stats-container'),
+        strategyChart: document.getElementById('strategyChart'),
+        weekdayChart: document.getElementById('weekdayChart'),
+        monthlyChart: document.getElementById('monthlyChart'),
+        strategySummary: document.getElementById('strategy-summary'),
 
         // Charts View
-        chartsView: document.getElementById('charts-view'),
         dateSelector: document.getElementById('date-selector'),
         chartDisplay: document.getElementById('chart-display'),
+        prevBtn: document.getElementById('prev-btn'),
+        nextBtn: document.getElementById('next-btn'),
         chartDate: document.getElementById('chart-date'),
-        chartChange: document.getElementById('chart-change'),
-        prevChartBtn: document.getElementById('prev-chart-btn'),
-        nextChartBtn: document.getElementById('next-chart-btn'),
+        chartChange: document.getElementById('chart-change')
     };
 
     // --- Initialization ---
 
-    function init() {
+    async function init() {
         setupEventListeners();
+        await loadData(state.currentTicker);
     }
 
     function setupEventListeners() {
-        // Ticker Selection (Landing)
+        // Ticker Selection
         elements.tickerBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
+            btn.addEventListener('click', async (e) => {
                 const ticker = e.target.dataset.ticker;
-                state.currentTicker = ticker;
-                updateTickerButtons();
-            });
-        });
-
-        // Action Buttons (Landing)
-        elements.actionBtns.forEach(btn => {
-            btn.addEventListener('click', (e) => {
-                // Find the button element even if span is clicked
-                const targetBtn = e.target.closest('.action-btn');
-                const targetView = targetBtn.dataset.target; // 'charts' or 'stats'
-
-                if (targetView === 'charts') {
-                    openChartsView();
-                } else if (targetView === 'stats') {
-                    openStatsView();
+                if (ticker !== state.currentTicker) {
+                    updateActiveButton(elements.tickerBtns, e.target);
+                    state.currentTicker = ticker;
+                    await loadData(ticker);
                 }
             });
         });
 
-        // Back Button
-        elements.backBtn.addEventListener('click', () => {
-            showView('landing');
-            elements.appHeader.classList.add('hidden');
+        // View Selection
+        elements.viewBtns.forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const view = e.target.dataset.view;
+                if (view !== state.currentView) {
+                    updateActiveButton(elements.viewBtns, e.target);
+                    switchView(view);
+                }
+            });
         });
 
         // Chart Navigation
@@ -86,13 +79,13 @@
             }
         });
 
-        elements.prevChartBtn.addEventListener('click', () => {
+        elements.prevBtn.addEventListener('click', () => {
             if (state.currentChartIndex > 0) {
                 renderDailyChart(state.currentChartIndex - 1);
             }
         });
 
-        elements.nextChartBtn.addEventListener('click', () => {
+        elements.nextBtn.addEventListener('click', () => {
             if (state.currentChartIndex < state.charts.length - 1) {
                 renderDailyChart(state.currentChartIndex + 1);
             }
@@ -110,114 +103,225 @@
         });
     }
 
-    // --- View Management ---
-
-    function showView(viewName) {
-        state.currentView = viewName;
-
-        // Hide all views
-        elements.landingView.classList.remove('active');
-        elements.statsView.classList.remove('active');
-        elements.chartsView.classList.remove('active');
-
-        // Show target view
-        if (viewName === 'landing') {
-            elements.landingView.classList.add('active');
-        } else if (viewName === 'stats') {
-            elements.statsView.classList.add('active');
-            elements.appHeader.classList.remove('hidden');
-            elements.headerTitle.textContent = 'Daily Statistics';
-            elements.currentTickerDisplay.textContent = state.currentTicker;
-        } else if (viewName === 'charts') {
-            elements.chartsView.classList.add('active');
-            elements.appHeader.classList.remove('hidden');
-            elements.headerTitle.textContent = 'Historical Charts';
-            elements.currentTickerDisplay.textContent = state.currentTicker;
-        }
+    function updateActiveButton(group, target) {
+        group.forEach(btn => btn.classList.remove('active'));
+        target.classList.add('active');
     }
 
-    function updateTickerButtons() {
-        elements.tickerBtns.forEach(btn => {
-            if (btn.dataset.ticker === state.currentTicker) {
-                btn.classList.add('active');
-            } else {
-                btn.classList.remove('active');
+    function switchView(viewName) {
+        state.currentView = viewName;
+        elements.viewSections.forEach(section => {
+            section.classList.remove('active');
+            if (section.id === `${viewName}-view`) {
+                section.classList.add('active');
             }
         });
     }
 
-    // --- Statistics View Logic ---
+    // --- Data Loading ---
 
-    async function openStatsView() {
-        showView('stats');
-        elements.statsContainer.innerHTML = '<div class="loading">Loading Statistics...</div>';
-
+    async function loadData(ticker) {
         try {
-            const response = await fetch(`data/${state.currentTicker}/stats_manifest.json`);
-            state.statsManifest = await response.json();
+            // Load Stats
+            const statsRes = await fetch(`data/stats_${ticker}.json`);
+            state.stats = await statsRes.json();
+
+            // Load Charts List
+            const chartsRes = await fetch(`data/charts_${ticker}.json`);
+            state.charts = await chartsRes.json();
+
+            // Reset Chart View
+            state.currentChartIndex = 0;
+            populateDateSelector();
+
+            // Render Current View
+            if (state.currentView === 'stats') {
+                renderStats();
+            } else {
+                renderDailyChart(0);
+            }
+
+            // Always render stats charts to be ready when switching
             renderStats();
+
         } catch (error) {
-            console.error('Error loading stats manifest:', error);
-            elements.statsContainer.innerHTML = '<div class="error">Failed to load statistics.</div>';
+            console.error('Error loading data:', error);
+            alert('Failed to load data for ' + ticker);
         }
     }
 
-    function renderStats() {
-        elements.statsContainer.innerHTML = '';
+    // --- Statistics Rendering ---
 
-        if (!state.statsManifest || state.statsManifest.length === 0) {
-            elements.statsContainer.innerHTML = '<div class="placeholder">No statistics available.</div>';
-            return;
+    function renderStats() {
+        if (!state.stats) return;
+
+        renderStrategyChart();
+        renderWeekdayChart();
+        renderMonthlyChart();
+        renderStrategySummary();
+    }
+
+    function renderStrategySummary() {
+        const s = state.stats.strategies;
+        const intraReturn = (s.intraday.total_return * 100).toFixed(2);
+        const overReturn = (s.overnight.total_return * 100).toFixed(2);
+
+        elements.strategySummary.innerHTML = `
+            <div class="summary-item">
+                <span class="label">Intraday (9:30-16:00)</span>
+                <span class="value ${s.intraday.total_return >= 0 ? 'pos' : 'neg'}">${intraReturn}%</span>
+                <div class="sub-text">Win Rate: ${(s.intraday.win_rate * 100).toFixed(1)}%</div>
+            </div>
+            <div class="summary-item">
+                <span class="label">Overnight (16:00-9:30)</span>
+                <span class="value ${s.overnight.total_return >= 0 ? 'pos' : 'neg'}">${overReturn}%</span>
+                <div class="sub-text">Win Rate: ${(s.overnight.win_rate * 100).toFixed(1)}%</div>
+            </div>
+        `;
+    }
+
+    function renderStrategyChart() {
+        const ctx = elements.strategyChart.getContext('2d');
+        const s = state.stats.strategies;
+
+        if (state.chartInstances.strategy) {
+            state.chartInstances.strategy.destroy();
         }
 
-        state.statsManifest.forEach(item => {
-            const card = document.createElement('div');
-            card.className = 'stat-card';
-
-            const img = document.createElement('img');
-            img.src = item.image;
-            img.alt = item.title;
-            img.className = 'stat-image';
-            img.loading = 'lazy';
-
-            const content = document.createElement('div');
-            content.className = 'stat-content';
-
-            const title = document.createElement('h3');
-            title.textContent = item.title;
-
-            const desc = document.createElement('p');
-            desc.textContent = item.description;
-
-            content.appendChild(title);
-            content.appendChild(desc);
-
-            card.appendChild(img);
-            card.appendChild(content);
-
-            elements.statsContainer.appendChild(card);
+        state.chartInstances.strategy = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: ['Intraday', 'Overnight'],
+                datasets: [{
+                    label: 'Total Return (%)',
+                    data: [s.intraday.total_return * 100, s.overnight.total_return * 100],
+                    backgroundColor: [
+                        'rgba(54, 162, 235, 0.7)',
+                        'rgba(255, 99, 132, 0.7)'
+                    ],
+                    borderColor: [
+                        'rgba(54, 162, 235, 1)',
+                        'rgba(255, 99, 132, 1)'
+                    ],
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: '#333' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }
+                }
+            }
         });
     }
 
-    // --- Historical Charts View Logic ---
+    function renderWeekdayChart() {
+        const ctx = elements.weekdayChart.getContext('2d');
+        const data = state.stats.day_of_week;
 
-    async function openChartsView() {
-        showView('charts');
-
-        // Load charts list if needed (or if ticker changed)
-        // Ideally we cache this, but for simplicity we reload
-        try {
-            const response = await fetch(`data/charts_${state.currentTicker}.json`);
-            state.charts = await response.json();
-
-            state.currentChartIndex = 0;
-            populateDateSelector();
-            renderDailyChart(0);
-        } catch (error) {
-            console.error('Error loading charts list:', error);
-            elements.chartDisplay.innerHTML = '<div class="error">Failed to load charts list.</div>';
+        if (state.chartInstances.weekday) {
+            state.chartInstances.weekday.destroy();
         }
+
+        state.chartInstances.weekday = new Chart(ctx, {
+            type: 'bar',
+            data: {
+                labels: data.map(d => d.day.substring(0, 3)),
+                datasets: [
+                    {
+                        label: 'Intraday Avg (%)',
+                        data: data.map(d => d.intraday_avg * 100),
+                        backgroundColor: 'rgba(54, 162, 235, 0.7)'
+                    },
+                    {
+                        label: 'Overnight Avg (%)',
+                        data: data.map(d => d.overnight_avg * 100),
+                        backgroundColor: 'rgba(255, 99, 132, 0.7)'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: '#333' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#e0e0e0' } }
+                }
+            }
+        });
     }
+
+    function renderMonthlyChart() {
+        const ctx = elements.monthlyChart.getContext('2d');
+        const data = state.stats.monthly;
+
+        if (state.chartInstances.monthly) {
+            state.chartInstances.monthly.destroy();
+        }
+
+        state.chartInstances.monthly = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: data.map(d => d.month.substring(0, 3)),
+                datasets: [
+                    {
+                        label: 'Intraday Avg (%)',
+                        data: data.map(d => d.intraday_avg * 100),
+                        borderColor: 'rgba(54, 162, 235, 1)',
+                        backgroundColor: 'rgba(54, 162, 235, 0.1)',
+                        tension: 0.1
+                    },
+                    {
+                        label: 'Overnight Avg (%)',
+                        data: data.map(d => d.overnight_avg * 100),
+                        borderColor: 'rgba(255, 99, 132, 1)',
+                        backgroundColor: 'rgba(255, 99, 132, 0.1)',
+                        tension: 0.1
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                scales: {
+                    y: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { color: '#333' }
+                    },
+                    x: {
+                        ticks: { color: '#e0e0e0' },
+                        grid: { display: false }
+                    }
+                },
+                plugins: {
+                    legend: { labels: { color: '#e0e0e0' } }
+                }
+            }
+        });
+    }
+
+    // --- Daily Charts Rendering ---
 
     function populateDateSelector() {
         elements.dateSelector.innerHTML = '';
@@ -230,7 +334,7 @@
     }
 
     function renderDailyChart(index) {
-        if (!state.charts || state.charts.length === 0) {
+        if (state.charts.length === 0) {
             elements.chartDisplay.innerHTML = '<div class="placeholder">No charts available</div>';
             return;
         }
@@ -238,33 +342,17 @@
         state.currentChartIndex = index;
         const chart = state.charts[index];
 
-        // Update UI Controls
+        // Update UI
         elements.dateSelector.value = index;
         elements.chartDate.textContent = `${chart.date} (${chart.weekday})`;
         elements.chartChange.textContent = chart.change;
         elements.chartChange.className = chart.change.includes('+') ? 'pos' : 'neg';
 
-        // Update Nav Button States
-        if (index === 0) {
-            elements.prevChartBtn.classList.add('disabled');
-        } else {
-            elements.prevChartBtn.classList.remove('disabled');
-        }
-
-        if (index === state.charts.length - 1) {
-            elements.nextChartBtn.classList.add('disabled');
-        } else {
-            elements.nextChartBtn.classList.remove('disabled');
-        }
+        elements.prevBtn.disabled = index === 0;
+        elements.nextBtn.disabled = index === state.charts.length - 1;
 
         // Render SVG
         const imgPath = `data/${state.currentTicker}/charts/${chart.filename}`;
-
-        // Preload next image for smoother navigation
-        if (index < state.charts.length - 1) {
-            const nextImg = new Image();
-            nextImg.src = `data/${state.currentTicker}/charts/${state.charts[index+1].filename}`;
-        }
 
         elements.chartDisplay.innerHTML = '<div class="loading">Loading...</div>';
 
@@ -277,7 +365,7 @@
             elements.chartDisplay.innerHTML = '<div class="error">Failed to load chart</div>';
         };
         img.src = imgPath;
-        img.className = 'chart-svg-viewer';
+        img.className = 'chart-svg';
     }
 
     // Initialize
