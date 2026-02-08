@@ -506,6 +506,14 @@ body {
     max-height: none;
 }
 
+/* Day-stat image - slightly smaller */
+.daystat-image {
+    max-width: 100%;
+    width: auto;
+    height: auto;
+    max-height: 550px;
+}
+
 .stat-title {
     font-size: 1rem;
     font-weight: 500;

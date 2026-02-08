@@ -125,7 +125,7 @@
             const img = document.createElement('img');
             img.src = 'data/daystat/' + stat.filename;
             img.alt = stat.title;
-            img.className = 'chart-image stat-image';
+            img.className = 'chart-image daystat-image';
             img.onload = () => {
                 elements.statDisplay.style.opacity = '1';
             };
