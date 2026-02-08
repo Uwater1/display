@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Day Trading Statistics">
+    <meta name="theme-color" content="#1a1a2e">
+    <title>Day-Stat</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app" class="app-container">
+        <header class="app-header stat-header">
+            <a href="index.html" class="back-link">← Back to Home</a>
+            <h1>Day-Stat</h1>
+        </header>
+
+        <main class="chart-container">
+            <div id="stat-display" class="chart-display stat-display">
+                <!-- PNG image will be loaded here -->
+                <div class="loading">Loading...</div>
+            </div>
+            <div id="stat-description" class="stat-description">
+                <!-- Description will be loaded here -->
+            </div>
+        </main>
+
+        <nav class="navigation">
+            <button id="prev-btn" class="nav-btn" aria-label="Previous">
+                <span class="nav-icon">←</span>
+                <span class="nav-text">Previous</span>
+            </button>
+
+            <div class="chart-info">
+                <div id="stat-counter" class="chart-counter">1 of 1</div>
+                <div id="stat-title" class="stat-title"></div>
+            </div>
+
+            <button id="next-btn" class="nav-btn" aria-label="Next">
+                <span class="nav-text">Next</span>
+                <span class="nav-icon">→</span>
+            </button>
+        </nav>
+    </div>
+
+    <script src="daystat.js"></script>
+</body>
+
+</html>
