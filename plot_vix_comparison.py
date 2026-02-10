@@ -107,7 +107,13 @@ def plot_comparison(
 
     # Formatting
     ax1.set_title(title, fontsize=15, fontweight="bold", color="white", pad=12)
-    ax1.xaxis.set_major_locator(mdates.YearLocator(2))
+    # Auto-adapt tick spacing based on date range
+    date_span_years = (combined.index[-1] - combined.index[0]).days / 365.25
+    if date_span_years <= 6:
+        ax1.xaxis.set_major_locator(mdates.YearLocator(1))
+        ax1.xaxis.set_minor_locator(mdates.MonthLocator(bymonth=[4, 7, 10]))
+    else:
+        ax1.xaxis.set_major_locator(mdates.YearLocator(2))
     ax1.xaxis.set_major_formatter(mdates.DateFormatter("%Y"))
     ax1.tick_params(axis="x", colors="white")
     ax1.grid(axis="both", color="#333", linewidth=0.3, alpha=0.6)
@@ -204,7 +210,43 @@ def main():
         filename="vxst_vs_gspc_hv.png",
     )
 
-    print("\n🎉  All 3 charts generated!")
+    # ── Zoomed-in charts (2021 – present) ───────────────────────────────
+    print("\nGenerating zoomed-in charts (2021–present) …\n")
+
+    # Zoom 1: VIX vs S&P 500 HV20
+    plot_comparison(
+        iv_series=vix,
+        hv_series=hv_gspc_20,
+        iv_label="VIX (Implied Vol)",
+        hv_label="S&P 500 HV20 (Historical Vol)",
+        title="VIX  vs  S&P 500 Historical Volatility (20-day)  —  2021 – Present",
+        start_date="2021-01-01",
+        filename="vix_vs_gspc_hv_zoom.png",
+    )
+
+    # Zoom 2: VXN vs Nasdaq-100 HV20
+    plot_comparison(
+        iv_series=vxn,
+        hv_series=hv_ndx_20,
+        iv_label="VXN (Implied Vol)",
+        hv_label="Nasdaq-100 HV20 (Historical Vol)",
+        title="VXN  vs  Nasdaq-100 Historical Volatility (20-day)  —  2021 – Present",
+        start_date="2021-01-01",
+        filename="vxn_vs_ndx_hv_zoom.png",
+    )
+
+    # Zoom 3: VXST (VIX9D) vs S&P 500 HV9
+    plot_comparison(
+        iv_series=vix9d,
+        hv_series=hv_gspc_9,
+        iv_label="VXST / VIX9D (Implied Vol)",
+        hv_label="S&P 500 HV9 (Historical Vol)",
+        title="VXST (VIX9D)  vs  S&P 500 Historical Volatility (9-day)  —  2021 – Present",
+        start_date="2021-01-01",
+        filename="vxst_vs_gspc_hv_zoom.png",
+    )
+
+    print("\n🎉  All 6 charts generated!")
 
 
 if __name__ == "__main__":
