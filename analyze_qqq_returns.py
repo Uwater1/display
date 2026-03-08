@@ -5,7 +5,7 @@ import os
 
 # Configuration
 DATA_PATH = '/home/hallo/Documents/display/data/qqq1d.csv'
-OUTPUT_CHART = '/home/hallo/Documents/display/qqq_expected_returns.png'
+OUTPUT_CHART = '/home/hallo/Documents/display/public/data/stats/qqq_expected_return.png'
 
 def calculate_returns():
     print(f"Reading data from {DATA_PATH}...")
