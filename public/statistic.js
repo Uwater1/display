@@ -72,6 +72,11 @@
             filename: "weekday_analysis_VUG.png",
             title: "VUG Weekday Analysis",
             description: "Analyzes VUG performance by day of week, examining if growth stocks exhibit weekday patterns."
+        },
+        {
+            filename: "qqq_expected_return.png",
+            title: "QQQ Expected Return Analysis",
+            description: "Analyzes QQQ expected return based on previous day move."
         }
     ];
 
