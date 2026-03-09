@@ -20,27 +20,12 @@ jobs:
     runs-on: ubuntu-slim
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.13'
-
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-
-      - name: Generate charts.json
-        run: python scripts/generate_index.py
-
-      - name: Copy chart files to public directory
-        run: |
-          mkdir -p public/data
-          cp -r data/chart public/data/
-          echo "Copied chart files:"
-          ls -la public/data/chart/ | head -10
+      - name: Super-linter
+        uses: super-linter/super-linter@v8.5.0
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Ensure public directory exists
         run: |
