@@ -96,18 +96,47 @@ def plot_histogram_with_cdf(data, bins, range_min, range_max, color, title, xlab
     """Helper to plot histogram with cumulative distribution line."""
     fig, ax1 = plt.subplots(figsize=(12, 8))
     
+    if is_time:
+        gap_bars = 18
+        data = np.where(np.array(data) > 24, np.array(data) + gap_bars, np.array(data))
+        bins += gap_bars
+        range_max += gap_bars
+
     # Histogram
     counts, bins_edges, _ = ax1.hist(data, bins=bins, range=(range_min, range_max), 
                            edgecolor='black', alpha=0.6, color=color, label='Frequency')
     
     if is_time:
-        ticks = [1, 7, 13, 19, 24, 25, 31, 37, 43, 48]
+        ticks = [1, 7, 13, 19, 24, 43, 49, 55, 61, 66]
         labels = ["09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00"]
         ax1.set_xticks(ticks)
         ax1.set_xticklabels(labels, rotation=45)
         ax1.set_xlabel("Time")
     else:
         ax1.set_xlabel(xlabel)
+
+    if 'Gap' in title:
+        stats_text = (
+            f"Total Days: {len(data)}\n"
+            f"Mean Gap: {np.mean(data):.3f}%\n"
+            f"Std Dev: {np.std(data):.3f}%\n"
+            f"Gap = 0: {np.mean(np.array(data) == 0)*100:.1f}%\n"
+            f"Gap > 0: {np.mean(np.array(data) > 0)*100:.1f}%\n"
+            f"Gap < 0: {np.mean(np.array(data) < 0)*100:.1f}%"
+        )
+        up_gaps = [d for d in data if d > 0]
+        dn_gaps = [d for d in data if d < 0]
+        if up_gaps: stats_text += f"\nAvg Up: {np.mean(up_gaps):.3f}%"
+        if dn_gaps: stats_text += f"\nAvg Down: {np.mean(dn_gaps):.3f}%"
+        
+        props = dict(boxstyle='round', facecolor='wheat', alpha=0.9)
+        ax1.text(0.02, 0.98, stats_text, transform=ax1.transAxes, fontsize=10,
+                verticalalignment='top', bbox=props)
+        
+        sorted_counts = np.sort(counts)
+        if len(sorted_counts) > 1 and sorted_counts[-1] > sorted_counts[-2] * 3:
+            y_max = sorted_counts[-2] * 2.0
+            ax1.set_ylim(0, max(y_max, 10))
 
     ax1.set_ylabel('Frequency', color=color)
     ax1.tick_params(axis='y', labelcolor=color)
@@ -167,15 +196,20 @@ def plot_results(results, daily_stats_df, df, out_dir):
     first_extreme = daily_stats_df[['high_bar', 'low_bar']].min(axis=1)
     second_extreme = daily_stats_df[['high_bar', 'low_bar']].max(axis=1)
     
-    ax1.hist(first_extreme, bins=max_bars, range=(1, max_bars+1), edgecolor='black', alpha=0.4, 
+    gap_bars = 18
+    first_extreme = np.where(first_extreme > 24, first_extreme + gap_bars, first_extreme)
+    second_extreme = np.where(second_extreme > 24, second_extreme + gap_bars, second_extreme)
+    max_bins = max_bars + gap_bars
+    
+    ax1.hist(first_extreme, bins=max_bins, range=(1, max_bins+1), edgecolor='black', alpha=0.4, 
              color='blue', label='First Extreme (Computed High OR Low)')
-    ax1.hist(second_extreme, bins=max_bars, range=(1, max_bars+1), edgecolor='black', alpha=0.4, 
+    ax1.hist(second_extreme, bins=max_bins, range=(1, max_bins+1), edgecolor='black', alpha=0.4, 
              color='orange', label='Second Extreme (Computed Both)')
     ax1.set_ylabel('Frequency')
     ax1.grid(alpha=0.3)
 
     # Create time labels for the x-axis
-    ticks = [1, 7, 13, 19, 24, 25, 31, 37, 43, 48]
+    ticks = [1, 7, 13, 19, 24, 43, 49, 55, 61, 66]
     labels = ["09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00"]
     ax1.set_xticks(ticks)
     ax1.set_xticklabels(labels, rotation=45)
@@ -225,11 +259,76 @@ def plot_results(results, daily_stats_df, df, out_dir):
     print(f"📊 Plot saved as '{filepath}'")
     plt.close()
     
-    # 5. Opening Gap Distribution
+    # 5. Opening Gap Distribution (custom: clip outliers, fine-grained bins)
     gaps = daily_stats_df['gap_pct'].dropna()
-    plot_histogram_with_cdf(gaps, 50, -5, 5, 'purple', 
-                          'Opening Gap Distribution (800)', 
-                          'Gap %', 'gap_dist.png', out_dir)
+    gap_lo, gap_hi = -5.0, 5.0
+    bin_size = 0.25
+    bin_edges = np.arange(gap_lo, gap_hi + bin_size, bin_size)
+
+    # Clip outliers into the boundary bins
+    gaps_clipped = np.clip(gaps, gap_lo + 1e-9, gap_hi - 1e-9)
+
+    n_below = (gaps < gap_lo).sum()
+    n_above = (gaps > gap_hi).sum()
+
+    fig_g, ax_g1 = plt.subplots(figsize=(12, 8))
+    counts_g, _, patches = ax_g1.hist(gaps_clipped, bins=bin_edges,
+                                       edgecolor='black', alpha=0.6, color='purple', label='Frequency')
+
+    # Label the first and last bar as outlier bins
+    if n_below > 0:
+        patches[0].set_facecolor('#9b59b6')
+        ax_g1.text(bin_edges[0] + bin_size/2, counts_g[0] + 1, f'< {gap_lo:.0f}%\n(n={n_below})',
+                   ha='center', va='bottom', fontsize=8, color='darkviolet', fontweight='bold')
+    if n_above > 0:
+        patches[-1].set_facecolor('#9b59b6')
+        ax_g1.text(bin_edges[-2] + bin_size/2, counts_g[-1] + 1, f'> {gap_hi:.0f}%\n(n={n_above})',
+                   ha='center', va='bottom', fontsize=8, color='darkviolet', fontweight='bold')
+
+    # Auto-trim x-axis to actual data extent with some padding
+    data_min = max(gaps.quantile(0.001), gap_lo)
+    data_max = min(gaps.quantile(0.999), gap_hi)
+    ax_g1.set_xlim(data_min - bin_size, data_max + bin_size)
+
+    ax_g1.set_xlabel('Gap %')
+    ax_g1.set_ylabel('Frequency', color='purple')
+    ax_g1.tick_params(axis='y', labelcolor='purple')
+    ax_g1.grid(alpha=0.3)
+
+    # Stats annotation
+    up_gaps = gaps[gaps > 0]
+    dn_gaps = gaps[gaps < 0]
+    stats_text = (
+        f"Total Days: {len(gaps)}\n"
+        f"Mean: {gaps.mean():.3f}%\n"
+        f"Std Dev: {gaps.std():.3f}%\n"
+        f"Median: {gaps.median():.3f}%\n"
+        f"Gap up: {(gaps > 0).mean()*100:.1f}%  Avg: {up_gaps.mean():.3f}%\n"
+        f"Gap dn: {(gaps < 0).mean()*100:.1f}%  Avg: {dn_gaps.mean():.3f}%\n"
+        f"Flat:   {(gaps == 0).mean()*100:.1f}%"
+    )
+    ax_g1.text(0.02, 0.98, stats_text, transform=ax_g1.transAxes, fontsize=9,
+               verticalalignment='top', bbox=dict(boxstyle='round', facecolor='wheat', alpha=0.9))
+
+    # CDF on twin axis
+    ax_g2 = ax_g1.twinx()
+    sorted_gaps = np.sort(gaps_clipped)
+    yvals_g = np.arange(len(sorted_gaps)) / float(len(sorted_gaps) - 1) * 100
+    ax_g2.plot(sorted_gaps, yvals_g, color='black', linewidth=2, label='Cumulative %')
+    ax_g2.set_ylabel('Cumulative %', color='black')
+    ax_g2.set_ylim(0, 105)
+    for pct in [50, 80, 95]:
+        ax_g2.axhline(y=pct, color='gray', linestyle=':', alpha=0.5)
+
+    plt.title('Opening Gap Distribution (800)', fontweight='bold')
+    lines1, labels1 = ax_g1.get_legend_handles_labels()
+    lines2, labels2 = ax_g2.get_legend_handles_labels()
+    ax_g1.legend(lines1 + lines2, labels1 + labels2, loc='upper right')
+    plt.tight_layout()
+    filepath_g = os.path.join(out_dir, 'gap_dist.png')
+    plt.savefig(filepath_g, dpi=150)
+    print(f"📊 Plot saved as '{filepath_g}'")
+    plt.close()
     
     # 6. Close Location in Range
     close_loc = daily_stats_df['close_in_range'].dropna() * 100
