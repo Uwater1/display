@@ -24,8 +24,35 @@ def load_data(filepath):
 def generate_liquidity_charts(df, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     
-    # Group by time of day
-    time_group = df.groupby('time_of_day')
+    # Helper to clean up the index labels
+    def format_time_labels(index_obj):
+        labels = []
+        for t in index_obj:
+            # Assuming 5 min intervals
+            start_m = t.hour * 60 + t.minute
+            end_m = start_m + 30 # Grouping to 30 min intervals, wait 30 min? User said 9:30 ~ 10:00 etc. 
+            # actually time is 5min bars so we probably should just do t + 30 min, actually user said "replace the 9:30:00 with 9:30 ~ 10:00 etc."
+            # Since the data is already grouped by time_of_day (every 5 min)
+            # wait, if the original labels are 9:30:00, 9:35:00 etc., it's 5 min bins. 
+            # I will just format the label to '{t.hour}:{t.minute:02d} ~ {later}' where later is +30min? Or +5min? Since data is 5 min bins 
+            # Ah user said "replace the 9:30:00 with 9:30 ~ 10:00 etc", which implies aggregating by 30 mins to make it 9:30~10:00! Let's resample by 30min? No, just formatting the labels from the 30M resample. Let's group by 30m!
+            pass # wait, I need to group by 30m first, otherwise there are 78 bars. 
+            
+    # Group by 30 minute intervals of time_of_day
+    # To do this correctly, let's map time_of_day to 30 min buckets
+    def to_30m_bucket(t):
+        minute = t.hour * 60 + t.minute
+        # 9:30 is 570.
+        if minute < 570: return "Pre-mkt"
+        bucket_idx = (minute - 570) // 30
+        start_min = 570 + bucket_idx * 30
+        end_min = start_min + 30
+        return f"{start_min//60:02d}:{start_min%60:02d} ~ {end_min//60:02d}:{end_min%60:02d}"
+
+    df['time_bucket'] = df['time_of_day'].apply(to_30m_bucket)
+    # Remove pre-market if any
+    df_filtered = df[df['time_bucket'] != "Pre-mkt"]
+    time_group = df_filtered.groupby('time_bucket')
     
     # 1. Average Volume by Time of Day
     avg_vol = time_group['Volume'].mean()

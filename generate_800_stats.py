@@ -92,14 +92,32 @@ def analyze_high_low_bars(df):
     return results, pd.DataFrame(daily_stats)
 
 
-def plot_histogram_with_cdf(data, bins, range_min, range_max, color, title, xlabel, filename, out_dir):
+def plot_histogram_with_cdf(data, bins, range_min, range_max, color, title, xlabel, filename, out_dir, is_time=False):
     """Helper to plot histogram with cumulative distribution line."""
     fig, ax1 = plt.subplots(figsize=(12, 8))
     
     # Histogram
-    counts, _, _ = ax1.hist(data, bins=bins, range=(range_min, range_max), 
+    counts, bins_edges, _ = ax1.hist(data, bins=bins, range=(range_min, range_max), 
                            edgecolor='black', alpha=0.6, color=color, label='Frequency')
-    ax1.set_xlabel(xlabel)
+    
+    if is_time:
+        # Create time labels for the x-axis
+        # Standard day trading session is 9:30 to 16:00 (1-78 bars)
+        # Let's map bar numbers to time
+        ticks = []
+        labels = []
+        for i in range(1, int(range_max), max(1, int(range_max//15))):
+            ticks.append(i)
+            minute_of_day = 9 * 60 + 30 + (i - 1) * 5
+            hour = minute_of_day // 60
+            minute = minute_of_day % 60
+            labels.append(f"{hour:02d}:{minute:02d}")
+        ax1.set_xticks(ticks)
+        ax1.set_xticklabels(labels, rotation=45)
+        ax1.set_xlabel("Time")
+    else:
+        ax1.set_xlabel(xlabel)
+
     ax1.set_ylabel('Frequency', color=color)
     ax1.tick_params(axis='y', labelcolor=color)
     ax1.grid(alpha=0.3)
@@ -124,6 +142,7 @@ def plot_histogram_with_cdf(data, bins, range_min, range_max, color, title, xlab
     # Legends
     lines1, labels1 = ax1.get_legend_handles_labels()
     lines2, labels2 = ax2.get_legend_handles_labels()
+    # Add a workaround for legend on twin axes
     ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper left')
     
     plt.tight_layout()
@@ -144,13 +163,13 @@ def plot_results(results, daily_stats_df, df, out_dir):
     high_bars = results['all']['high_bars']
     plot_histogram_with_cdf(high_bars, max_bars, 1, max_bars+1, 'green', 
                           'Distribution of Day High Occurrence (800)', 
-                          'Bar Number', 'high_dist.png', out_dir)
+                          'Time', 'high_dist.png', out_dir, is_time=True)
     
     # 2. Low Bar Distribution with CDF
     low_bars = results['all']['low_bars']
     plot_histogram_with_cdf(low_bars, max_bars, 1, max_bars+1, 'red', 
                           'Distribution of Day Low Occurrence (800)', 
-                          'Bar Number', 'low_dist.png', out_dir)
+                          'Time', 'low_dist.png', out_dir, is_time=True)
     
     # 3. First Extreme (Either High or Low) and Second Extreme (Both)
     fig, ax1 = plt.subplots(figsize=(12, 8))
@@ -161,9 +180,21 @@ def plot_results(results, daily_stats_df, df, out_dir):
              color='blue', label='First Extreme (Computed High OR Low)')
     ax1.hist(second_extreme, bins=max_bars, range=(1, max_bars+1), edgecolor='black', alpha=0.4, 
              color='orange', label='Second Extreme (Computed Both)')
-    ax1.set_xlabel('Bar Number')
     ax1.set_ylabel('Frequency')
     ax1.grid(alpha=0.3)
+
+    # Create time labels for the x-axis
+    ticks = []
+    labels = []
+    for i in range(1, int(max_bars+1), max(1, int((max_bars+1)//15))):
+        ticks.append(i)
+        minute_of_day = 9 * 60 + 30 + (i - 1) * 5
+        hour = minute_of_day // 60
+        minute = minute_of_day % 60
+        labels.append(f"{hour:02d}:{minute:02d}")
+    ax1.set_xticks(ticks)
+    ax1.set_xticklabels(labels, rotation=45)
+    ax1.set_xlabel("Time")
     
     ax2 = ax1.twinx()
     sorted_first = np.sort(first_extreme)
@@ -211,7 +242,7 @@ def plot_results(results, daily_stats_df, df, out_dir):
     
     # 5. Opening Gap Distribution
     gaps = daily_stats_df['gap_pct'].dropna()
-    plot_histogram_with_cdf(gaps, 50, -3, 3, 'purple', 
+    plot_histogram_with_cdf(gaps, 50, -5, 5, 'purple', 
                           'Opening Gap Distribution (800)', 
                           'Gap %', 'gap_dist.png', out_dir)
     
