@@ -4,9 +4,6 @@ Stock Data Downloader
 
 This script downloads stock data at various intervals (including 1d with max range) 
 using yfinance and saves them as CSV files for later analysis.
-
-Author: Kilo Code
-Date: 2026-01-11
 """
 
 import yfinance as yf
