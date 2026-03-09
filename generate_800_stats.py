@@ -101,17 +101,8 @@ def plot_histogram_with_cdf(data, bins, range_min, range_max, color, title, xlab
                            edgecolor='black', alpha=0.6, color=color, label='Frequency')
     
     if is_time:
-        # Create time labels for the x-axis
-        # Standard day trading session is 9:30 to 16:00 (1-78 bars)
-        # Let's map bar numbers to time
-        ticks = []
-        labels = []
-        for i in range(1, int(range_max), max(1, int(range_max//15))):
-            ticks.append(i)
-            minute_of_day = 9 * 60 + 30 + (i - 1) * 5
-            hour = minute_of_day // 60
-            minute = minute_of_day % 60
-            labels.append(f"{hour:02d}:{minute:02d}")
+        ticks = [1, 7, 13, 19, 24, 25, 31, 37, 43, 48]
+        labels = ["09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00"]
         ax1.set_xticks(ticks)
         ax1.set_xticklabels(labels, rotation=45)
         ax1.set_xlabel("Time")
@@ -184,14 +175,8 @@ def plot_results(results, daily_stats_df, df, out_dir):
     ax1.grid(alpha=0.3)
 
     # Create time labels for the x-axis
-    ticks = []
-    labels = []
-    for i in range(1, int(max_bars+1), max(1, int((max_bars+1)//15))):
-        ticks.append(i)
-        minute_of_day = 9 * 60 + 30 + (i - 1) * 5
-        hour = minute_of_day // 60
-        minute = minute_of_day % 60
-        labels.append(f"{hour:02d}:{minute:02d}")
+    ticks = [1, 7, 13, 19, 24, 25, 31, 37, 43, 48]
+    labels = ["09:30", "10:00", "10:30", "11:00", "11:30", "13:00", "13:30", "14:00", "14:30", "15:00"]
     ax1.set_xticks(ticks)
     ax1.set_xticklabels(labels, rotation=45)
     ax1.set_xlabel("Time")
@@ -296,9 +281,10 @@ def plot_results(results, daily_stats_df, df, out_dir):
     
     # 9. Time-based High/Low Buckets
     plt.figure(figsize=(10, 6))
-    bucket_labels = ['Morning\n(1-12)', 'Mid-Morn\n(13-24)', 'Midday\n(25-48)', 
-                     'Afternoon\n(49-66)', 'Last Hour\n(67+)']
-    bucket_ranges = [(1, 12), (13, 24), (25, 48), (49, 66), (67, 100)]
+    bucket_labels = ['9:30\n10:00', '10:00\n10:30', '10:30\n11:00', '11:00\n11:30', 
+                     '13:00\n13:30', '13:30\n14:00', '14:00\n14:30', '14:30\n15:00']
+    bucket_ranges = [(1, 6), (7, 12), (13, 18), (19, 24), 
+                     (25, 30), (31, 36), (37, 42), (43, 48)]
     
     high_buckets = [len([b for b in high_bars if r[0] <= b <= r[1]]) for r in bucket_ranges]
     low_buckets = [len([b for b in low_bars if r[0] <= b <= r[1]]) for r in bucket_ranges]
