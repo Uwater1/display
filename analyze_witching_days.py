@@ -5,41 +5,29 @@ import os
 
 # Configuration: Index data files
 FILES = {
-    'SZ50 (SSE 50)': '/home/hallo/Documents/display/data/sz50_1d.csv',
+    'SZ50 (SSE 50)': '/home/hallo/Documents/display/data/sz50_1d.csv', 
     'HS300 (CSI 300)': '/home/hallo/Documents/display/data/hs300_1d.csv',
-    'ZZ1000 (CSI 1000)': '/home/hallo/Documents/display/data/zz1000_1d.csv'
+    'ZZ500 (CSI 500)': '/home/hallo/Documents/display/data/zz500_1d.csv',
+    'ZZ1000 (CSI 1000)': '/home/hallo/Documents/display/data/zz1000_1d.csv' # Did not trade until July 2022
 }
 
-START_DATE = '2006-09-08'
+START_DATE = '2010-04-16' #China introduced its first stock-index futures on April 16, 2010
 
 def get_target_dates(start_year, end_year):
-    """Calculates 4th Wednesdays and 3rd Fridays."""
-    dates = []
-    for year in range(start_year, end_year + 1):
-        for month in range(1, 13):
-            # 4th Wednesday
-            count = 0
-            for day in range(1, 32):
-                try:
-                    dt = datetime(year, month, day)
-                    if dt.weekday() == 2:
-                        count += 1
-                        if count == 4:
-                            dates.append(('4th_Wed (Option)', dt))
-                            break
-                except ValueError: break
-            # 3rd Friday
-            count = 0
-            for day in range(1, 32):
-                try:
-                    dt = datetime(year, month, day)
-                    if dt.weekday() == 4:
-                        count += 1
-                        if count == 3:
-                            dates.append(('3rd_Fri (Future)', dt))
-                            break
-                except ValueError: break
-    return dates
+    """Calculates 4th Wednesdays (Options) and 3rd Fridays (Futures) using Pandas."""
+    start = f"{start_year}-01-01"
+    end = f"{end_year}-12-31"
+    
+    # WOM (Week of Month) frequencies: 4th Wed and 3rd Fri
+    option_dates = pd.date_range(start, end, freq='WOM-4WED')
+    future_dates = pd.date_range(start, end, freq='WOM-3FRI')
+    
+    # Construct results using pandas Timestamps for consistency
+    dates = [('4th_Wed (Option)', d) for d in option_dates] + \
+            [('3rd_Fri (Futures)', d) for d in future_dates]
+            
+    return sorted(dates, key=lambda x: x[1])
+
 
 def load_data(file_path):
     with open(file_path, 'r') as f:
@@ -48,16 +36,20 @@ def load_data(file_path):
         df = pd.read_csv(file_path, skiprows=3, names=['Date', 'Close', 'High', 'Low', 'Open', 'Volume'])
     elif first_line.startswith('time,open'):
         df = pd.read_csv(file_path)
-        df = df.rename(columns={'time': 'Date', 'close': 'Close', 'open': 'Open', 'high': 'High', 'low': 'Low', 'volume': 'Volume'})
+        df = df.rename(columns={'time': 'Date', 'close': 'Close', 'open': 'Open', 'high': 'High', 'low': 'Low', 'Volume': 'Volume'})
     else:
         df = pd.read_csv(file_path)
         for col in df.columns:
             if 'date' in col.lower() or 'time' in col.lower(): df = df.rename(columns={col: 'Date'})
             if 'close' in col.lower(): df = df.rename(columns={col: 'Close'})
+    
     df['Date'] = pd.to_datetime(df['Date'])
-    df = df[df['Date'] >= START_DATE]
     df = df.sort_values('Date').reset_index(drop=True)
     df['Return'] = df['Close'].pct_change()
+    
+    # Filter after calculating returns
+    start_ts = pd.to_datetime(START_DATE)
+    df = df[df['Date'] >= start_ts].reset_index(drop=True)
     return df
 
 def get_bucket_stats(rets):
@@ -95,10 +87,16 @@ def analyze():
         
         # Target Days
         witching_data = []
+        start_ts = pd.to_datetime(START_DATE)
         for type_name, dt in target_dates:
+            # Skip target dates before our analysis starts
+            if dt < start_ts:
+                continue
+                
             actual_dt = dt
             while actual_dt not in trading_dates_set and actual_dt <= trading_dates[-1]:
                 actual_dt += timedelta(days=1)
+            
             if actual_dt in trading_dates_set:
                 ret = df[df['Date'] == actual_dt]['Return'].values[0]
                 if not np.isnan(ret):
@@ -118,8 +116,8 @@ if __name__ == "__main__":
     results = analyze()
     pd.set_option('display.max_columns', None)
     pd.set_option('display.width', 1000)
-    print("\n=== Custom Bucket Distribution Analysis (Post 2006-09-08) ===")
-    cols = ['Index', 'Period', 'Count', 'Mean (%)', 'WinRate (%)', '< -2% (%)', '< -1% (%)', '> 1% (%)', '> 2% (%)', '|x| < 0.5% (%)']
+    print("\n=== Custom Bucket Distribution Analysis (Volatility Included) ===")
+    cols = ['Index', 'Period', 'Count', 'Mean (%)', 'Std (%)', 'WinRate (%)', '< -2% (%)', '< -1% (%)', '> 1% (%)', '> 2% (%)', '|x| < 0.5% (%)']
     print(results[cols].round(2))
     
     results.to_csv('/home/hallo/Documents/display/witching_day_custom_buckets.csv', index=False)
