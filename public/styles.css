@@ -532,3 +532,39 @@ body {
         padding: 1.5rem;
     }
 }
+
+/* Tabs Styling for ETF Selectors */
+.tabs-container {
+    display: flex;
+    justify-content: center;
+    gap: 0.5rem;
+    margin: 1rem 0;
+    flex-wrap: wrap;
+    width: 100%;
+}
+
+.tab-btn {
+    padding: 0.6rem 1.2rem;
+    background: var(--bg-secondary);
+    color: var(--text-secondary);
+    border: 1px solid var(--border-color);
+    border-radius: var(--radius-md);
+    font-size: 0.9rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    user-select: none;
+}
+
+.tab-btn:hover {
+    color: var(--text-primary);
+    border-color: var(--accent-primary);
+    background: var(--bg-card);
+}
+
+.tab-btn.active {
+    color: var(--text-primary);
+    background: var(--accent-primary);
+    border-color: var(--accent-primary);
+    box-shadow: 0 0 10px var(--accent-glow);
+}

@@ -60,13 +60,13 @@ python generate_chart.py data.csv --output chart.svg
 ### Download Data
 ```bash
 # Download 5-minute data for tickers (default: 59 days)
-python data_downloader.py QQQ SPY AAPL
+python data_downloader.py QQQ SPY AAPL 5m
 
 # Download daily data (max range)
-python data_downloader.py QQQ --interval 1d
+python data_downloader.py QQQ 1d
 
 # Custom date range
-python data_downloader.py QQQ --interval 5m --start 2026-01-01 --end 2026-02-01
+python data_downloader.py QQQ 5m --start-date 2026-01-01 --end-date 2026-02-01
 ```
 
 ### Download Options
@@ -88,12 +88,12 @@ python monthly_analysis.py -p
 python extended_stats.py -p
 
 # Day-trading statistics
-python qqq_daytrading_stats.py qqq5m.csv -p
+python qqq_daytrading_stats.py -p
 ```
 
 ### Split CSV
 ```bash
-python spilt.py qqq5m.csv --output-dir public/data
+python spilt.py qqq5m.csv --output public/data
 ```
 
 ### Rebuild Chart Index
