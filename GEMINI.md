@@ -55,7 +55,7 @@ Large CSVs, parquet, and SVGs are committed directly. `data/` and `public/data/`
 ## Repo layout shortcuts
 
 - `generate_chart.py` — SVG candlestick generator (entry point for new charts).
-- `generate_etf_stats.py` — Runs morning gap, fill rate, and return distribution analyses on 5 ETF Parquet files. Saves PNG plots to `public/data/daystata/<etf_key>/`.
+- `generate_etf_stats.py` — Runs morning gap, fill rate, return distribution, daytrading pattern, and liquidity analyses on 5 ETF Parquet files and CSI 800 CSV files. Saves PNG plots to `public/data/daystata/<asset_key>/`.
 - `data_downloader.py` — yfinance OHLCV downloader.
 - `download_options_improved.py` — options chains + Black-Scholes IV (preferred over `download_options.py`).
 - `spilt.py` — splits 5m CSV into 2-trading-day chunks.
@@ -67,9 +67,9 @@ Large CSVs, parquet, and SVGs are committed directly. `data/` and `public/data/`
 ## ETF & Index Day Trading Statistics (Day-Stat-A)
 
 - Parquet files (`data/*_5m.parquet`) contain 5-minute bar data for Chinese ETFs.
-- `python generate_etf_stats.py` reads these Parquet files, calculates 12 statistics, and outputs PNG plots to `public/data/daystata/<etf_key>/` (keys: `sse50`, `csi300`, `csi500`, `chinext`, `star50`).
-- Original CSI 800 plots (from `800.csv`) live in `public/data/daystata/csi800/`.
-- Frontend `public/daystata.html` has tabs to switch between assets. URL parameter `a` tracks active asset, `i` tracks chart index.
+- `data/800.csv` and `data/hs300_zz500_sum.csv` contain data for the CSI 800 Index.
+- `python generate_etf_stats.py` reads these datasets, calculates 20 statistics (including daytrading patterns and liquidity analysis), and outputs PNG plots to `public/data/daystata/<asset_key>/` (keys: `sse50`, `csi300`, `csi500`, `chinext`, `star50`, `csi800`).
+- Frontend `public/daystata.html` and `public/daystata.js` display all 20 charts consistently for all 6 assets. URL parameter `a` tracks the active asset, `i` tracks the chart index.
 
 ## Conventions
 

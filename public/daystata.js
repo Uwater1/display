@@ -6,8 +6,8 @@
 (function () {
     'use strict';
 
-    // Standard list of plots for the 5 ETFs
-    const standardPlots = [
+    // Unified list of 20 plots for all assets
+    const plots = [
         {
             filename: "gap_dist.png",
             title: "Opening Gap Distribution (High Precision)",
@@ -67,81 +67,46 @@
             filename: "close_loc.png",
             title: "Close Location in Range",
             description: "Where price closes relative to the day's range (0 = Low, 100 = High)."
-        }
-    ];
-
-    // CSI 800 (from 800.csv) specific plots
-    const csi800Plots = [
-        {
-            filename: "high_dist.png",
-            title: "800 - High Bar Distribution",
-            description: "Shows at which 5-minute bar the day's high typically occurs."
-        },
-        {
-            filename: "low_dist.png",
-            title: "800 - Low Bar Distribution",
-            description: "Shows at which 5-minute bar the day's low typically occurs."
-        },
-        {
-            filename: "extremes_dist.png",
-            title: "800 - Extremes Distribution",
-            description: "Combined view of when daily highs and lows occur."
-        },
-        {
-            filename: "high_low_sequence.png",
-            title: "800 - High-Low Sequence",
-            description: "Analyzes whether the daily high or low comes first."
-        },
-        {
-            filename: "gap_dist.png",
-            title: "800 - Gap Distribution",
-            description: "Distribution of opening gaps."
-        },
-        {
-            filename: "gap_categories.png",
-            title: "800 - Gap Categories",
-            description: "Categorizes opening gaps into buckets."
-        },
-        {
-            filename: "first_hour.png",
-            title: "800 - First Hour Analysis",
-            description: "Compares the first hour of trading vs the rest of the day."
-        },
-        {
-            filename: "close_loc.png",
-            title: "800 - Close Location",
-            description: "Where price closes relative to the day's range."
-        },
-        {
-            filename: "time_buckets.png",
-            title: "800 - Time Bucket Analysis",
-            description: "Breaks the trading day into time periods."
         },
         {
             filename: "common_bars.png",
-            title: "800 - Common Bar Patterns",
-            description: "Identifies the most common bar patterns."
+            title: "Common Bar Patterns",
+            description: "Identifies the most common 5-minute bars where the daily high and low are established."
         },
-        // Liquidity Study (hs300_zz500_sum.csv)
         {
-            filename: "../../liquidity/avg_volume_time.png",
+            filename: "first_hour.png",
+            title: "First Hour Range Contribution",
+            description: "Distribution of the first hour of trading range as a percentage of the total daily range."
+        },
+        {
+            filename: "time_buckets.png",
+            title: "Time Bucket Analysis",
+            description: "Compares the frequency of daily highs and lows occurring within different time buckets throughout the trading session."
+        },
+        {
+            filename: "gap_categories.png",
+            title: "Gap Size Categories",
+            description: "Bar chart categorizing opening gaps into size-based buckets (Large/Small Up/Down)."
+        },
+        {
+            filename: "liquidity_vol.png",
             title: "Liquidity - Average Volume (Time of Day)",
-            description: "Average Volume by Time of Day for HS300+ZZ500 Sum."
+            description: "Average trading volume/turnover by time of day, illustrating the U-shaped intraday volume pattern."
         },
         {
-            filename: "../../liquidity/avg_range_time.png",
-            title: "Liquidity - Average Range (Time of Day)",
-            description: "Average Price Range (High-Low) by Time of Day for HS300+ZZ500 Sum."
-        },
-        {
-            filename: "../../liquidity/price_impact_time.png",
-            title: "Liquidity - Price Impact (Time of Day)",
-            description: "Price Impact per Volume Unit (Liquidity Proxy) by Time of Day."
-        },
-        {
-            filename: "../../liquidity/vol_pct_time.png",
+            filename: "liquidity_vol_pct.png",
             title: "Liquidity - Volume % (Time of Day)",
-            description: "Percentage of Daily Volume by Time of Day for HS300+ZZ500 Sum."
+            description: "Percentage of total daily trading volume/turnover executed in each intraday interval."
+        },
+        {
+            filename: "liquidity_range.png",
+            title: "Liquidity - Average Range (Time of Day)",
+            description: "Average price range (High-Low % of close) by time of day, highlighting periods of high volatility."
+        },
+        {
+            filename: "liquidity_impact.png",
+            title: "Liquidity - Price Impact (Time of Day)",
+            description: "Amihud Price Impact (absolute return divided by turnover/volume) by time of day, acting as a proxy for execution slippage."
         }
     ];
 
@@ -150,32 +115,32 @@
         csi300: {
             prefix: "daystata/csi300/",
             name: "CSI 300",
-            plots: standardPlots
+            plots: plots
         },
         csi500: {
             prefix: "daystata/csi500/",
             name: "CSI 500",
-            plots: standardPlots
+            plots: plots
         },
         sse50: {
             prefix: "daystata/sse50/",
             name: "SSE 50",
-            plots: standardPlots
+            plots: plots
         },
         chinext: {
             prefix: "daystata/chinext/",
             name: "ChiNext",
-            plots: standardPlots
+            plots: plots
         },
         star50: {
             prefix: "daystata/star50/",
             name: "STAR 50",
-            plots: standardPlots
+            plots: plots
         },
         csi800: {
             prefix: "daystata/csi800/",
             name: "CSI 800",
-            plots: csi800Plots
+            plots: plots
         }
     };
 
