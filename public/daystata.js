@@ -107,8 +107,19 @@
             filename: "liquidity_impact.png",
             title: "Liquidity - Price Impact (Time of Day)",
             description: "Amihud Price Impact (absolute return divided by turnover/volume) by time of day, acting as a proxy for execution slippage."
+        },
+        {
+            filename: "trend_growing.png",
+            title: "Trend Following - Growing Streak (N Days)",
+            description: "Probability of next-day return being positive (continuing up trend) after N consecutive growing days, alongside sample counts and average next-day returns."
+        },
+        {
+            filename: "trend_falling.png",
+            title: "Trend Following - Falling Streak (N Days)",
+            description: "Probability of next-day return being negative (continuing down trend) after N consecutive falling days, alongside sample counts and average next-day returns."
         }
     ];
+
 
     // Map each asset ID to its prefix directory and list of plots
     const assets = {

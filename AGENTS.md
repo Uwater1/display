@@ -68,8 +68,9 @@ Large CSVs, parquet, and SVGs are committed directly. `data/` and `public/data/`
 
 - Parquet files (`data/*_5m.parquet`) contain 5-minute bar data for Chinese ETFs.
 - `data/800.csv` and `data/hs300_zz500_sum.csv` contain data for the CSI 800 Index.
-- `python generate_etf_stats.py` reads these datasets, calculates 20 statistics (including daytrading patterns and liquidity analysis), and outputs PNG plots to `public/data/daystata/<asset_key>/` (keys: `sse50`, `csi300`, `csi500`, `chinext`, `star50`, `csi800`).
-- Frontend `public/daystata.html` and `public/daystata.js` display all 20 charts consistently for all 6 assets. URL parameter `a` tracks the active asset, `i` tracks the chart index.
+- `python generate_etf_stats.py` reads these datasets, calculates 22 statistics (including daytrading patterns, liquidity analysis, and trend following streaks), and outputs PNG plots to `public/data/daystata/<asset_key>/` (keys: `sse50`, `csi300`, `csi500`, `chinext`, `star50`, `csi800`).
+- Frontend `public/daystata.html` and `public/daystata.js` display all 22 charts consistently for all 6 assets. URL parameter `a` tracks the active asset, `i` tracks the chart index.
+
 
 ## Conventions
 

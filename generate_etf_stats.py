@@ -213,6 +213,33 @@ def analyze_etf(etf_key, etf_info):
     daily_df = pd.DataFrame(daily_stats)
     gap_fill_df = pd.DataFrame(gap_fill_bars)
     
+    # Calculate consecutive growing (up) and falling (down) streaks prior to each day
+    up_streaks = []
+    down_streaks = []
+    for i in range(len(daily_df)):
+        if i == 0:
+            up_streaks.append(0)
+            down_streaks.append(0)
+            continue
+            
+        u_count = 0
+        j = i - 1
+        while j >= 0 and daily_df.iloc[j]['cc_ret'] is not None and daily_df.iloc[j]['cc_ret'] > 0:
+            u_count += 1
+            j -= 1
+        up_streaks.append(u_count)
+        
+        d_count = 0
+        j = i - 1
+        while j >= 0 and daily_df.iloc[j]['cc_ret'] is not None and daily_df.iloc[j]['cc_ret'] < 0:
+            d_count += 1
+            j -= 1
+        down_streaks.append(d_count)
+        
+    daily_df['up_streak'] = up_streaks
+    daily_df['down_streak'] = down_streaks
+    
+    
     # Create directory for output
     out_dir = os.path.join(OUT_BASE_DIR, etf_key)
     os.makedirs(out_dir, exist_ok=True)
@@ -565,6 +592,90 @@ def analyze_etf(etf_key, etf_info):
     plt.savefig(os.path.join(out_dir, 'gap_categories.png'))
     plt.close()
 
+    # 21. Growing Streak Trend Following
+    win_rates_up, counts_up, avg_rets_up = [], [], []
+    win_rates_down, counts_down, avg_rets_down = [], [], []
+    streak_labels = ['1 Day', '2 Days', '3 Days', '4 Days', '5 Days', '6 Days', '7+ Days']
+
+    for n in range(1, 8):
+        # Up streak
+        sub_up = daily_df[daily_df['up_streak'] == n] if n < 7 else daily_df[daily_df['up_streak'] >= 7]
+        cnt_u = len(sub_up)
+        counts_up.append(cnt_u)
+        win_rates_up.append((sub_up['cc_ret'] > 0).mean() * 100 if cnt_u > 0 else 0)
+        avg_rets_up.append(sub_up['cc_ret'].mean() if cnt_u > 0 else 0)
+
+        # Down streak
+        sub_dn = daily_df[daily_df['down_streak'] == n] if n < 7 else daily_df[daily_df['down_streak'] >= 7]
+        cnt_d = len(sub_dn)
+        counts_down.append(cnt_d)
+        win_rates_down.append((sub_dn['cc_ret'] < 0).mean() * 100 if cnt_d > 0 else 0)
+        avg_rets_down.append(sub_dn['cc_ret'].mean() if cnt_d > 0 else 0)
+
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+    x = np.arange(len(streak_labels))
+    width = 0.5
+    bars = ax1.bar(x, win_rates_up, width, color='#2ecc71', edgecolor='black', alpha=0.8, label='Trend Following Chance (%)')
+    ax1.set_ylabel('Trend Continuation Probability (%)', color='#1e8449')
+    ax1.tick_params(axis='y', labelcolor='#1e8449')
+    ax1.set_ylim(0, 105)
+    ax1.set_xlabel('Prior Growing (Up) Streak Length')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(streak_labels)
+    ax1.axhline(50, color='gray', linestyle='--', alpha=0.7, label='50% Baseline')
+    ax1.grid(True, alpha=0.3, axis='y')
+
+    for bar, wr, count in zip(bars, win_rates_up, counts_up):
+        if count > 0:
+            ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 2,
+                     f"{wr:.1f}%\n(n={count})", ha='center', va='bottom', fontsize=8, fontweight='bold')
+
+    ax2 = ax1.twinx()
+    ax2.plot(x, avg_rets_up, color='#e67e22', marker='o', linewidth=2.5, markersize=8, label='Avg Next-Day Return (%)')
+    ax2.set_ylabel('Avg Next-Day Return (%)', color='#d35400')
+    ax2.tick_params(axis='y', labelcolor='#d35400')
+    ax2.axhline(0, color='black', linestyle=':', alpha=0.5)
+
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3)
+    plt.title(f"{name}\nChance of Trend Following after Growing for N Days", fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, 'trend_growing.png'), bbox_inches='tight')
+    plt.close()
+
+    # 22. Falling Streak Trend Following
+    fig, ax1 = plt.subplots(figsize=(10, 6))
+    bars = ax1.bar(x, win_rates_down, width, color='#e74c3c', edgecolor='black', alpha=0.8, label='Trend Following Chance (%)')
+    ax1.set_ylabel('Trend Continuation Probability (%)', color='#922b21')
+    ax1.tick_params(axis='y', labelcolor='#922b21')
+    ax1.set_ylim(0, 105)
+    ax1.set_xlabel('Prior Falling (Down) Streak Length')
+    ax1.set_xticks(x)
+    ax1.set_xticklabels(streak_labels)
+    ax1.axhline(50, color='gray', linestyle='--', alpha=0.7, label='50% Baseline')
+    ax1.grid(True, alpha=0.3, axis='y')
+
+    for bar, wr, count in zip(bars, win_rates_down, counts_down):
+        if count > 0:
+            ax1.text(bar.get_x() + bar.get_width()/2., bar.get_height() + 2,
+                     f"{wr:.1f}%\n(n={count})", ha='center', va='bottom', fontsize=8, fontweight='bold')
+
+    ax2 = ax1.twinx()
+    ax2.plot(x, avg_rets_down, color='#2980b9', marker='s', linewidth=2.5, markersize=8, label='Avg Next-Day Return (%)')
+    ax2.set_ylabel('Avg Next-Day Return (%)', color='#1b4f72')
+    ax2.tick_params(axis='y', labelcolor='#1b4f72')
+    ax2.axhline(0, color='black', linestyle=':', alpha=0.5)
+
+    lines1, labels1 = ax1.get_legend_handles_labels()
+    lines2, labels2 = ax2.get_legend_handles_labels()
+    ax1.legend(lines1 + lines2, labels1 + labels2, loc='upper center', bbox_to_anchor=(0.5, -0.15), ncol=3)
+    plt.title(f"{name}\nChance of Trend Following after Falling for N Days", fontweight='bold')
+    plt.tight_layout()
+    plt.savefig(os.path.join(out_dir, 'trend_falling.png'), bbox_inches='tight')
+    plt.close()
+
+
     # ------------------ LIQUIDITY CHARTS GENERATION ------------------
     # Now generate the 4 liquidity plots (vol, vol_pct, range, impact)
     print("Generating liquidity plots...")
@@ -714,7 +825,7 @@ def analyze_etf(etf_key, etf_info):
         plt.savefig(os.path.join(out_dir, 'liquidity_impact.png'))
         plt.close()
 
-    print(f"Finished generating all 20 plots for {name}.")
+    print(f"Finished generating all 22 plots for {name}.")
 
 def main():
     print("Starting ETF intraday and daily statistics calculations...")
